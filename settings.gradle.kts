@@ -4,5 +4,6 @@ include(
     "testloom-core",
     "testloom-spring-boot-starter",
     "testloom-cli",
-    "testloom-examples"
+    "testloom-examples:mvc-postgres-demo",
+    "testloom-examples:grpc-postgres-demo"
 )
