@@ -1,0 +1,33 @@
+testloom:
+  recorder:
+    enabled: false
+    mode: local
+    output-dir: ./.testloom/captures
+    include-bodies: true
+    max-body-size-kb: 64
+    include-paths:
+      - /api/**
+    exclude-paths:
+      - /actuator/**
+  redaction:
+    mask: "***"
+    headers:
+      - authorization
+      - cookie
+      - set-cookie
+    json-fields:
+      - password
+      - token
+      - secret
+    query-params:
+      - token
+      - api_key
+    rules:
+      - type: HEADER
+        target: authorization
+        matcher: EXACT
+        action: MASK
+      - type: JSON_FIELD
+        target: password
+        matcher: EXACT
+        action: MASK

@@ -1,0 +1,69 @@
+package dev.testloom.core.config.application.service.lint;
+
+import dev.testloom.core.config.domain.exception.TestloomConfigValidationException;
+import dev.testloom.core.config.domain.model.TestloomConfig;
+
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+/**
+ * Main linter that orchestrates all section-specific linters.
+ */
+public final class TestloomConfigLinter {
+    private static final TestloomConfigLinter DEFAULT_LINTER = createDefault();
+    private final List<ConfigSectionLinter<TestloomConfig>> sectionLinters;
+
+    public TestloomConfigLinter(List<ConfigSectionLinter<TestloomConfig>> sectionLinters) {
+        this.sectionLinters = List.copyOf(Objects.requireNonNull(sectionLinters, "sectionLinters must not be null"));
+    }
+
+    /**
+     * Returns the default linter composition used by runtime loaders.
+     *
+     * @return default linter
+     */
+    public static TestloomConfigLinter defaultLinter() {
+        return DEFAULT_LINTER;
+    }
+
+    /**
+     * Lints config and throws if lint errors are found.
+     *
+     * @param config config to lint
+     * @param source source path used in lint error messages
+     */
+    public void lintOrThrow(TestloomConfig config, Path source) {
+        Objects.requireNonNull(source, "source must not be null");
+        List<String> errors = lint(config);
+        if (!errors.isEmpty()) {
+            throw new TestloomConfigValidationException(
+                    "Invalid testloom config at " + source.toAbsolutePath() + ": " + String.join("; ", errors)
+            );
+        }
+    }
+
+    List<String> lint(TestloomConfig config) {
+        List<String> errors = new ArrayList<>();
+        if (config == null) {
+            errors.add("Configuration must not be null.");
+            return errors;
+        }
+
+        for (ConfigSectionLinter<TestloomConfig> sectionLinter : sectionLinters) {
+            sectionLinter.lint(config, errors);
+        }
+        return errors;
+    }
+
+    private static TestloomConfigLinter createDefault() {
+        RecorderConfigLinter recorderConfigLinter = new RecorderConfigLinter();
+        RedactionConfigLinter redactionConfigLinter = new RedactionConfigLinter();
+
+        return new TestloomConfigLinter(List.of(
+                (config, errors) -> recorderConfigLinter.lint(config.getRecorder(), errors),
+                (config, errors) -> redactionConfigLinter.lint(config.getRedaction(), errors)
+        ));
+    }
+}

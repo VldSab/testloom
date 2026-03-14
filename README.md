@@ -6,14 +6,13 @@ Turn real HTTP flows into reproducible Spring Boot integration tests.
 
 Testloom is in early development.
 
-What exists today:
-- Gradle multi-module monorepo skeleton
-- Base modules: `testloom-core`, `testloom-spring-boot-starter`, `testloom-cli`, `testloom-examples`
-
-What is not released yet:
-- Published artifacts
-- Working recorder/generator commands
-- Production-ready starter behavior
+Implemented now:
+- Multi-module Gradle monorepo
+- Runnable CLI (`testloom`) with `--help` and `init`
+- Config template generation (`testloom.yaml`)
+- YAML config loader in `testloom-core`
+- Redaction rules model + normalization + validation
+- DDD-style package organization for config domain
 
 ## MVP scope
 
@@ -24,11 +23,73 @@ What is not released yet:
 - Local/dev/staging capture only
 - Template-based integration test generation
 
-Transport strategy:
-- MVP: HTTP only
-- Next protocol track: gRPC (instead of prioritizing WebFlux)
+Not released yet:
+- Published artifacts
+- Full runtime HTTP capture in starter
+- Test generation pipeline
 
-## Repository layout
+## Quick start
+
+Build:
+
+```bash
+./gradlew test
+```
+
+Show CLI help:
+
+```bash
+./gradlew :testloom-cli:run --args='--help'
+```
+
+Create default config:
+
+```bash
+./gradlew :testloom-cli:run --args='init'
+```
+
+Or write to a custom location:
+
+```bash
+./gradlew :testloom-cli:run --args='init --path ./config/testloom.yaml --force'
+```
+
+## CLI command surface
+
+```text
+testloom init
+```
+
+Planned next commands:
+
+- `testloom inspect --capture <file>`
+- `testloom generate --capture <file> --out <dir>`
+- `testloom db dump --tables <...> --out <file>`
+
+## testloom.yaml shape
+
+Generated config contains:
+- `testloom.recorder` (enabled/mode/output-dir/body and path controls)
+- `testloom.redaction` (headers/json-fields/query-params/mask)
+- `testloom.redaction.rules[]` (typed rule structure: target type, matcher, action)
+
+## Config package layout (DDD)
+
+`testloom-core` organizes config code by DDD concerns:
+
+```text
+dev.testloom.core.config
+  application
+    port
+    service
+  domain
+    model
+    exception
+  infrastructure
+    yaml
+```
+
+## Monorepo layout
 
 ```text
 testloom/
@@ -40,37 +101,7 @@ testloom/
     grpc-postgres-demo/
 ```
 
-Module responsibilities:
-- `testloom-core`: capture model, redaction, fixture model, generation model, use cases
-- `testloom-spring-boot-starter`: Spring Boot integration and safe capture hooks
-- `testloom-cli`: user-facing commands that orchestrate core use cases
-- `testloom-examples`: demo apps for validation and documentation
-
-## Planned workflow
-
-1. Run a Spring app locally with Testloom starter enabled.
-2. Perform a real API call.
-3. Save a sanitized capture envelope JSON.
-4. Generate an integration test and resources from the capture.
-5. Run generated tests in CI.
-
-## MVP command surface (planned)
-
-```text
-testloom init
-testloom inspect --capture <file>
-testloom generate --capture <file> --out <dir>
-testloom db dump --tables <...> --out <file>
-```
-
-## Build and inspect locally
-
-```bash
-./gradlew projects
-./gradlew test
-```
-
-## Non-goals for MVP
+## Non-goals for current MVP
 
 - Kafka capture
 - gRPC capture in MVP runtime
