@@ -19,7 +19,7 @@ class ConfigDefaultsTest {
         assertThat(defaults.getMode()).isEqualTo(RecorderMode.LOCAL);
         assertThat(defaults.getOutputDir()).isEqualTo("./.testloom/captures");
         assertThat(defaults.isIncludeBodies()).isTrue();
-        assertThat(defaults.getMaxBodySizeKb()).isEqualTo(64);
+        assertThat(defaults.getMaxBodySizeBytes()).isEqualTo(65536);
         assertThat(defaults.getIncludePaths()).containsExactly("/api/**").inOrder();
         assertThat(defaults.getExcludePaths()).containsExactly("/actuator/**").inOrder();
     }

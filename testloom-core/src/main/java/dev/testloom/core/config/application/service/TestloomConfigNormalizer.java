@@ -44,7 +44,7 @@ public final class TestloomConfigNormalizer {
             normalized.setMode(recorder.getMode());
             normalized.setOutputDir(trimToNull(recorder.getOutputDir()));
             normalized.setIncludeBodies(recorder.isIncludeBodies());
-            normalized.setMaxBodySizeKb(recorder.getMaxBodySizeKb());
+            normalized.setMaxBodySizeBytes(recorder.getMaxBodySizeBytes());
             normalized.setIncludePaths(normalizeDistinctStrings(recorder.getIncludePaths(), UnaryOperator.identity()));
             normalized.setExcludePaths(normalizeDistinctStrings(recorder.getExcludePaths(), UnaryOperator.identity()));
             return normalized;

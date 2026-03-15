@@ -4,7 +4,7 @@ testloom:
     mode: local
     output-dir: ./.testloom/captures
     include-bodies: true
-    max-body-size-kb: 64
+    max-body-size-bytes: 65536
     include-paths:
       - /api/**
     exclude-paths:

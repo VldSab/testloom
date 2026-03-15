@@ -18,8 +18,8 @@ public class RecorderConfig {
     private String outputDir;
     @JsonProperty("include-bodies")
     private boolean includeBodies;
-    @JsonProperty("max-body-size-kb")
-    private int maxBodySizeKb;
+    @JsonProperty("max-body-size-bytes")
+    private int maxBodySizeBytes;
     @JsonProperty("include-paths")
     private List<String> includePaths;
     @JsonProperty("exclude-paths")
@@ -32,13 +32,13 @@ public class RecorderConfig {
      */
     public static RecorderConfig defaults() {
         RecorderConfig config = new RecorderConfig();
-        config.setEnabled(false);
-        config.setMode(RecorderMode.LOCAL);
-        config.setOutputDir("./.testloom/captures");
-        config.setIncludeBodies(true);
-        config.setMaxBodySizeKb(64);
-        config.setIncludePaths(List.of("/api/**"));
-        config.setExcludePaths(List.of("/actuator/**"));
+        config.setEnabled(RecorderDefaults.ENABLED);
+        config.setMode(RecorderDefaults.MODE);
+        config.setOutputDir(RecorderDefaults.OUTPUT_DIR);
+        config.setIncludeBodies(RecorderDefaults.INCLUDE_BODIES);
+        config.setMaxBodySizeBytes(RecorderDefaults.MAX_BODY_SIZE_BYTES);
+        config.setIncludePaths(RecorderDefaults.INCLUDE_PATHS);
+        config.setExcludePaths(RecorderDefaults.EXCLUDE_PATHS);
         return config;
     }
 }

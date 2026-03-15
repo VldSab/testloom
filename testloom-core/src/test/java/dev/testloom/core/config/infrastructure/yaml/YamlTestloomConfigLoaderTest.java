@@ -46,7 +46,7 @@ class YamlTestloomConfigLoaderTest {
                     mode: local
                     output-dir: ./.testloom/captures
                     include-bodies: true
-                    max-body-size-kb: 64
+                    max-body-size-bytes: 65536
                     include-paths: ["/api/**"]
                   redaction:
                     mask: "***"
@@ -123,7 +123,7 @@ class YamlTestloomConfigLoaderTest {
                     mode: staging
                     output-dir: ./captures
                     include-bodies: true
-                    max-body-size-kb: 128
+                    max-body-size-bytes: 131072
                     include-paths: ["/api/**", " /api/** "]
                   redaction:
                     mask: "###"
@@ -161,7 +161,7 @@ class YamlTestloomConfigLoaderTest {
                     mode: StAgInG
                     output-dir: ./captures
                     include-bodies: true
-                    max-body-size-kb: 64
+                    max-body-size-bytes: 65536
                     include-paths: ["/api/**"]
                     exclude-paths: ["/actuator/**"]
                   redaction:
@@ -203,7 +203,7 @@ class YamlTestloomConfigLoaderTest {
                     mode: local
                     output-dir: ./.testloom/captures
                     include-bodies: true
-                    max-body-size-kb: 64
+                    max-body-size-bytes: 65536
                   redaction:
                     mask: "***"
                     rules:
@@ -226,7 +226,7 @@ class YamlTestloomConfigLoaderTest {
                     mode: local
                     output-dir: ./.testloom/captures
                     include-bodies: true
-                    max-body-size-kb: 64
+                    max-body-size-bytes: 65536
                   redaction:
                     mask: "***"
                     rules:
@@ -252,7 +252,7 @@ class YamlTestloomConfigLoaderTest {
                     mode: local
                     output-dir: ./.testloom/captures
                     include-bodies: true
-                    max-body-size-kb: 64
+                    max-body-size-bytes: 65536
                   redaction:
                     mask: "***"
                     rules:
@@ -274,7 +274,7 @@ class YamlTestloomConfigLoaderTest {
         Path configPath = writeConfig(tempDir, """
                 testloom:
                   recorder:
-                    max-body-size-kb: -5
+                    max-body-size-bytes: -5
                   redaction:
                     mask: ""
                 """);
@@ -283,7 +283,7 @@ class YamlTestloomConfigLoaderTest {
                 TestloomConfigValidationException.class,
                 () -> loader.load(configPath)
         );
-        assertThat(error).hasMessageThat().contains("max-body-size-kb");
+        assertThat(error).hasMessageThat().contains("max-body-size-bytes");
         assertThat(error).hasMessageThat().contains("redaction.mask");
     }
 
@@ -295,7 +295,7 @@ class YamlTestloomConfigLoaderTest {
                     enabled: true
                     mode: local
                     include-bodies: true
-                    max-body-size-kb: 64
+                    max-body-size-bytes: 65536
                   redaction:
                     mask: "***"
                 """);

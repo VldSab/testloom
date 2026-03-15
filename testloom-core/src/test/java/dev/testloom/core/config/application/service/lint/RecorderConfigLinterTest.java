@@ -29,7 +29,7 @@ class RecorderConfigLinterTest {
         RecorderConfig recorder = new RecorderConfig();
         recorder.setMode(null);
         recorder.setOutputDir("   ");
-        recorder.setMaxBodySizeKb(0);
+        recorder.setMaxBodySizeBytes(0);
 
         List<String> errors = new ArrayList<>();
         linter.lint(recorder, errors);
@@ -37,7 +37,7 @@ class RecorderConfigLinterTest {
         assertThat(errors).containsAtLeast(
                 "testloom.recorder.mode must be one of LOCAL, DEV, STAGING.",
                 "testloom.recorder.output-dir must not be blank.",
-                "testloom.recorder.max-body-size-kb must be > 0."
+                "testloom.recorder.max-body-size-bytes must be > 0."
         );
         assertThat(errors).hasSize(3);
     }
@@ -47,7 +47,7 @@ class RecorderConfigLinterTest {
         RecorderConfig recorder = new RecorderConfig();
         recorder.setMode(RecorderMode.LOCAL);
         recorder.setOutputDir("./.testloom/captures");
-        recorder.setMaxBodySizeKb(64);
+        recorder.setMaxBodySizeBytes(65536);
 
         List<String> errors = new ArrayList<>();
         linter.lint(recorder, errors);

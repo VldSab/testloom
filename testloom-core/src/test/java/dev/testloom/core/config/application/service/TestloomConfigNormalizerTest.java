@@ -43,7 +43,7 @@ class TestloomConfigNormalizerTest {
         recorder.setMode(RecorderMode.DEV);
         recorder.setOutputDir("   ");
         recorder.setIncludeBodies(false);
-        recorder.setMaxBodySizeKb(256);
+        recorder.setMaxBodySizeBytes(256);
         recorder.setIncludePaths(new ArrayList<>(List.of("/api/**", " /api/** ", " /orders/** ")));
         recorder.setExcludePaths(new ArrayList<>(List.of(" /actuator/** ", "/actuator/**", "/health/**")));
 

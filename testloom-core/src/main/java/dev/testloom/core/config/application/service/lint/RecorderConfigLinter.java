@@ -20,8 +20,8 @@ public final class RecorderConfigLinter implements ConfigSectionLinter<RecorderC
         if (LintStrings.isBlank(recorder.getOutputDir())) {
             errors.add("testloom.recorder.output-dir must not be blank.");
         }
-        if (recorder.getMaxBodySizeKb() <= 0) {
-            errors.add("testloom.recorder.max-body-size-kb must be > 0.");
+        if (recorder.getMaxBodySizeBytes() <= 0) {
+            errors.add("testloom.recorder.max-body-size-bytes must be > 0.");
         }
     }
 }
