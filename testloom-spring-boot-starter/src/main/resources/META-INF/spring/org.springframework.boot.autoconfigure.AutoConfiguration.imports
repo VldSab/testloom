@@ -1,0 +1,2 @@
+dev.testloom.spring.autoconfigure.TestloomAutoConfiguration
+dev.testloom.spring.autoconfigure.TestloomMvcAutoConfiguration
