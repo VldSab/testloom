@@ -1,0 +1,10 @@
+testloom:
+  recorder:
+    enabled: true
+    output-dir: ${TESTLOOM_RECORDER_OUTPUT_DIR:./.testloom/captures}
+    include-bodies: true
+    max-body-size-bytes: 65536
+    include-paths:
+      - /api/**
+    exclude-paths:
+      - /actuator/**
