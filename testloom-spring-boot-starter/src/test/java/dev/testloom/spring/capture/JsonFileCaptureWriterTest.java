@@ -29,7 +29,7 @@ class JsonFileCaptureWriterTest {
 
         List<Path> files = listFiles(outputDir);
         assertThat(files).hasSize(1);
-        assertThat(files.getFirst().getFileName().toString()).endsWith(".json");
+        assertThat(files.getFirst().getFileName().toString()).isEqualTo("20260315T120000000Z_api_hello.json");
 
         JsonNode root = objectMapper.readTree(files.getFirst().toFile());
         assertThat(root.get("schemaVersion").asText()).isEqualTo("0.1.0");
@@ -47,7 +47,7 @@ class JsonFileCaptureWriterTest {
         writer.write(sampleEnvelope("   "));
 
         String fileName = listFiles(outputDir).getFirst().getFileName().toString();
-        assertThat(fileName).contains("_root_");
+        assertThat(fileName).isEqualTo("20260315T120000000Z_root.json");
     }
 
     @Test
@@ -58,11 +58,11 @@ class JsonFileCaptureWriterTest {
         writer.write(sampleEnvelope("/v1/orders/{id}"));
 
         String fileName = listFiles(outputDir).getFirst().getFileName().toString();
-        assertThat(fileName).contains("_v1_orders_id_");
+        assertThat(fileName).isEqualTo("20260315T120000000Z_v1_orders_id.json");
     }
 
     @Test
-    void writeGeneratesUniqueFilenames(@TempDir Path tempDir) throws Exception {
+    void writeAppendsNumericSuffixWhenNameCollides(@TempDir Path tempDir) throws Exception {
         Path outputDir = tempDir.resolve("captures");
         JsonFileCaptureWriter writer = new JsonFileCaptureWriter(objectMapper, outputDir.toString());
         CaptureEnvelope envelope = sampleEnvelope("/api/hello");
@@ -72,7 +72,8 @@ class JsonFileCaptureWriterTest {
 
         List<Path> files = listFiles(outputDir);
         assertThat(files).hasSize(2);
-        assertThat(files.get(0).getFileName().toString()).isNotEqualTo(files.get(1).getFileName().toString());
+        assertThat(files.get(0).getFileName().toString()).isEqualTo("20260315T120000000Z_api_hello.json");
+        assertThat(files.get(1).getFileName().toString()).isEqualTo("20260315T120000000Z_api_hello_2.json");
     }
 
     @Test

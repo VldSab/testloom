@@ -12,6 +12,7 @@ Implemented now:
 - Config template generation (`testloom.yaml`)
 - YAML config loader in `testloom-core`
 - Redaction rules model + normalization + validation
+- MVC HTTP capture filter + JSON file writer in starter
 - DDD-style package organization for config domain
 
 ## MVP scope
@@ -72,6 +73,10 @@ Generated config contains:
 - `testloom.recorder` (enabled/mode/output-dir/body and path controls)
 - `testloom.redaction` (headers/json-fields/query-params/mask)
 - `testloom.redaction.rules[]` (typed rule structure: target type, matcher, action)
+
+## Capture format
+
+Capture JSON schema v0.1 is documented in [docs/capture-format.md](docs/capture-format.md).
 
 ## Config package layout (DDD)
 
