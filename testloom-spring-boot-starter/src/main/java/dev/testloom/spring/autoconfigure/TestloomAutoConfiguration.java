@@ -1,12 +1,12 @@
 package dev.testloom.spring.autoconfigure;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.testloom.spring.capture.CaptureFailureHandler;
-import dev.testloom.spring.capture.CaptureRecorder;
-import dev.testloom.spring.capture.CaptureWriter;
-import dev.testloom.spring.capture.JsonFileCaptureWriter;
+import dev.testloom.core.capture.application.port.CaptureFailureHandler;
+import dev.testloom.core.capture.application.port.CaptureRecorder;
+import dev.testloom.core.capture.application.port.CaptureWriter;
+import dev.testloom.core.capture.application.service.SafeCaptureRecorder;
+import dev.testloom.core.capture.infrastructure.file.JsonFileCaptureWriter;
 import dev.testloom.spring.capture.LoggingCaptureFailureHandler;
-import dev.testloom.spring.capture.SafeCaptureRecorder;
 import dev.testloom.spring.properties.TestloomProperties;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

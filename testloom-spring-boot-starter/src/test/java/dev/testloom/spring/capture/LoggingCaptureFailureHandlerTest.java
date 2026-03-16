@@ -1,6 +1,6 @@
 package dev.testloom.spring.capture;
 
-import dev.testloom.spring.capture.model.CaptureEnvelope;
+import dev.testloom.core.capture.domain.model.CaptureEnvelope;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

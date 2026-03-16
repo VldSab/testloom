@@ -1,14 +1,14 @@
-package dev.testloom.spring.capture.model;
+package dev.testloom.core.capture.domain.model;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * Transport-neutral capture payload written by runtime integrations.
+ * Transport-neutral capture payload written by runtime adapters.
  *
  * @param schemaVersion capture schema version
  * @param recordedAt ISO-8601 timestamp of capture creation
- * @param transport transport type identifier, for example {@code HTTP}
+ * @param transport transport identifier, for example {@code HTTP}
  * @param request captured request details
  * @param response captured response details
  */
@@ -20,9 +20,9 @@ public record CaptureEnvelope(
         ResponseCapture response
 ) {
     /**
-     * Captured HTTP request data.
+     * Captured request payload.
      *
-     * @param method HTTP method
+     * @param method transport method, for example HTTP method
      * @param path request path
      * @param query raw query string
      * @param headers request headers
@@ -40,9 +40,9 @@ public record CaptureEnvelope(
     }
 
     /**
-     * Captured HTTP response data.
+     * Captured response payload.
      *
-     * @param status HTTP status code
+     * @param status transport status code
      * @param headers response headers
      * @param body response body, may be {@code null}
      * @param contentType response content type

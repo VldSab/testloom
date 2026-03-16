@@ -1,8 +1,9 @@
-package dev.testloom.spring.capture;
+package dev.testloom.core.capture.infrastructure.file;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.testloom.spring.capture.model.CaptureEnvelope;
+import dev.testloom.core.capture.domain.exception.TestloomCaptureException;
+import dev.testloom.core.capture.domain.model.CaptureEnvelope;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 

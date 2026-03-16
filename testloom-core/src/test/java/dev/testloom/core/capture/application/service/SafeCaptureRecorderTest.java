@@ -1,6 +1,8 @@
-package dev.testloom.spring.capture;
+package dev.testloom.core.capture.application.service;
 
-import dev.testloom.spring.capture.model.CaptureEnvelope;
+import dev.testloom.core.capture.application.port.CaptureFailureHandler;
+import dev.testloom.core.capture.application.port.CaptureWriter;
+import dev.testloom.core.capture.domain.model.CaptureEnvelope;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

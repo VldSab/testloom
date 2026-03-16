@@ -1,7 +1,7 @@
 package dev.testloom.spring.mvc;
 
-import dev.testloom.spring.capture.CaptureRecorder;
-import dev.testloom.spring.capture.model.CaptureEnvelope;
+import dev.testloom.core.capture.application.port.CaptureRecorder;
+import dev.testloom.core.capture.domain.model.CaptureEnvelope;
 import dev.testloom.spring.properties.TestloomProperties;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

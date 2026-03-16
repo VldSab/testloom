@@ -1,6 +1,6 @@
 package dev.testloom.spring.autoconfigure;
 
-import dev.testloom.spring.capture.CaptureRecorder;
+import dev.testloom.core.capture.application.port.CaptureRecorder;
 import dev.testloom.spring.mvc.AntPatternMvcCapturePathMatcher;
 import dev.testloom.spring.mvc.MvcCaptureFilter;
 import dev.testloom.spring.mvc.MvcCapturePathMatcher;

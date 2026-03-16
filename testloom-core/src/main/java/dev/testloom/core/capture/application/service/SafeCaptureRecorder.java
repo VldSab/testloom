@@ -1,11 +1,14 @@
-package dev.testloom.spring.capture;
+package dev.testloom.core.capture.application.service;
 
-import dev.testloom.spring.capture.model.CaptureEnvelope;
+import dev.testloom.core.capture.application.port.CaptureFailureHandler;
+import dev.testloom.core.capture.application.port.CaptureRecorder;
+import dev.testloom.core.capture.application.port.CaptureWriter;
+import dev.testloom.core.capture.domain.model.CaptureEnvelope;
 
 import java.util.Objects;
 
 /**
- * Safe capture recorder that prevents sink failures from leaking to request handling.
+ * Fail-safe recorder that never propagates writer failures to caller code.
  */
 public final class SafeCaptureRecorder implements CaptureRecorder {
     private final CaptureWriter captureWriter;

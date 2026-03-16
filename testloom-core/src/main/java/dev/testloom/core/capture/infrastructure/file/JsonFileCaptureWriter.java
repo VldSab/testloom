@@ -1,8 +1,10 @@
-package dev.testloom.spring.capture;
+package dev.testloom.core.capture.infrastructure.file;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import dev.testloom.spring.capture.model.CaptureEnvelope;
+import dev.testloom.core.capture.application.port.CaptureWriter;
+import dev.testloom.core.capture.domain.exception.TestloomCaptureException;
+import dev.testloom.core.capture.domain.model.CaptureEnvelope;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -15,7 +17,7 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
- * Default {@link CaptureWriter} implementation that writes envelopes to local JSON files.
+ * File-system writer that persists capture envelopes as JSON files.
  *
  * <p>File naming contract is {@code <timestamp>_<route>.json}. If a file with the same
  * name already exists, a deterministic numeric suffix is appended:
@@ -31,40 +33,34 @@ public final class JsonFileCaptureWriter implements CaptureWriter {
     private final ObjectWriter writer;
 
     /**
-     * Creates a JSON file writer.
+     * Creates a JSON file capture writer.
      *
-     * @param objectMapper mapper used to serialize envelopes
-     * @param outputDirectory directory where capture files are written
+     * @param objectMapper mapper used for envelope serialization
+     * @param outputDirectory target directory for capture files
      */
     public JsonFileCaptureWriter(ObjectMapper objectMapper, String outputDirectory) {
         this.outputDirectory = Objects.requireNonNull(outputDirectory, "outputDirectory must not be null");
-        this.writer = objectMapper.writerWithDefaultPrettyPrinter();
+        this.writer = Objects.requireNonNull(objectMapper, "objectMapper must not be null")
+                .writerWithDefaultPrettyPrinter();
     }
 
-    /**
-     * Writes one envelope to the configured output directory.
-     *
-     * <p>The output directory is created when it does not exist.
-     *
-     * @param envelope envelope to write
-     * @throws TestloomCaptureException when the file cannot be written
-     */
     @Override
     public void write(CaptureEnvelope envelope) {
+        Objects.requireNonNull(envelope, "envelope must not be null");
         try {
             Path directory = Path.of(outputDirectory).toAbsolutePath().normalize();
             Files.createDirectories(directory);
             String baseFileName = buildBaseFileName(envelope);
             Path target = resolveTargetPath(directory, baseFileName);
             writer.writeValue(target.toFile(), envelope);
-        } catch (IOException e) {
-            throw new TestloomCaptureException("Failed to write capture envelope to disk.", e);
+        } catch (IOException exception) {
+            throw new TestloomCaptureException("Failed to write capture envelope to disk.", exception);
         }
     }
 
     private String buildBaseFileName(CaptureEnvelope envelope) {
         String timestamp = normalizeTimestamp(envelope.recordedAt());
-        String route = sanitizeRoute(envelope.request().path());
+        String route = sanitizeRoute(envelope.request() == null ? null : envelope.request().path());
         return timestamp + "_" + route;
     }
 

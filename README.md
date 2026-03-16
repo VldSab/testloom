@@ -106,6 +106,13 @@ testloom/
     grpc-postgres-demo/
 ```
 
+## Module boundaries
+
+- `testloom-core`: capture contracts, domain model, and infrastructure that does not depend on Spring.
+- `testloom-spring-boot-starter`: Spring Boot auto-configuration and MVC adapter (`OncePerRequestFilter`).
+- `testloom-cli`: command-line entrypoints and orchestration.
+- `testloom-examples`: runnable demo applications.
+
 ## Non-goals for current MVP
 
 - Kafka capture

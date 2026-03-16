@@ -1,6 +1,7 @@
 package dev.testloom.spring.capture;
 
-import dev.testloom.spring.capture.model.CaptureEnvelope;
+import dev.testloom.core.capture.application.port.CaptureFailureHandler;
+import dev.testloom.core.capture.domain.model.CaptureEnvelope;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 

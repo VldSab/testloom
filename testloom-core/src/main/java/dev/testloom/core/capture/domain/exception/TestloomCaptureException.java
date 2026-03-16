@@ -1,4 +1,4 @@
-package dev.testloom.spring.capture;
+package dev.testloom.core.capture.domain.exception;
 
 import lombok.experimental.StandardException;
 
