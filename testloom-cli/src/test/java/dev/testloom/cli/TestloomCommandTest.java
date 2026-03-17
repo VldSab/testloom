@@ -8,6 +8,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
@@ -200,6 +201,42 @@ class TestloomCommandTest {
         assertThat(detected).isEqualTo(start);
     }
 
+    @Test
+    void findProjectRootReturnsNearestAncestorWithGitDirectory(@TempDir Path tempDir) throws Exception {
+        Path projectRoot = tempDir.resolve("repo");
+        Path moduleDir = projectRoot.resolve("testloom-cli");
+        Files.createDirectories(moduleDir);
+        Files.createDirectories(projectRoot.resolve(".git"));
+
+        Path detected = invokeFindProjectRoot(moduleDir);
+
+        assertThat(detected).isEqualTo(projectRoot);
+    }
+
+    @Test
+    void resolveOutputPathUsesProjectRootAndDefaultFileName() throws Exception {
+        InitCommand command = new InitCommand();
+        Method method = InitCommand.class.getDeclaredMethod("resolveOutputPath");
+        method.setAccessible(true);
+
+        Path resolved = (Path) method.invoke(command);
+
+        assertThat(resolved.getFileName().toString()).isEqualTo("testloom.yaml");
+        assertThat(resolved.isAbsolute()).isTrue();
+    }
+
+    @Test
+    void initCommandRejectsRootPathWithoutFileName() {
+        CliHarness cli = CliHarness.create();
+        String rootPath = FileSystems.getDefault().getRootDirectories().iterator().next().toString();
+
+        int exitCode = cli.execute("init", "--path", rootPath);
+
+        assertThat(exitCode).isEqualTo(2);
+        assertThat(cli.stderr()).contains("Config path must include a file name.");
+    }
+
+    @Test
     private static Path invokeFindProjectRoot(Path start) throws Exception {
         Method method = InitCommand.class.getDeclaredMethod("findProjectRoot", Path.class);
         method.setAccessible(true);

@@ -82,14 +82,16 @@ class SafeCaptureRecorderTest {
                         null,
                         Map.of("accept", List.of("application/json")),
                         null,
-                        null
+                        null,
+                        new CaptureEnvelope.Truncation(false, 0, 0)
                 ),
                 new CaptureEnvelope.ResponseCapture(
                         200,
                         Map.of(),
                         "{\"message\":\"hello\"}",
                         "application/json",
-                        5
+                        5,
+                        new CaptureEnvelope.Truncation(false, 19, 19)
                 )
         );
     }

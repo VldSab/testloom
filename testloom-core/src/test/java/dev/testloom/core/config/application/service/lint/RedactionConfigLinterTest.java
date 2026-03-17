@@ -90,4 +90,16 @@ class RedactionConfigLinterTest {
 
         assertThat(errors).isEmpty();
     }
+
+    @Test
+    void nullRulesCollectionIsAllowed() {
+        RedactionConfig redaction = new RedactionConfig();
+        redaction.setMask("***");
+        redaction.setRules(null);
+
+        List<String> errors = new ArrayList<>();
+        linter.lint(redaction, errors);
+
+        assertThat(errors).isEmpty();
+    }
 }

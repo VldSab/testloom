@@ -1,6 +1,6 @@
 package dev.testloom.spring.mvc;
 
-import dev.testloom.spring.properties.TestloomProperties;
+import dev.testloom.core.config.domain.model.TestloomConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Tests path matching behavior for MVC capture include/exclude patterns.
@@ -17,69 +18,94 @@ class AntPatternMvcCapturePathMatcherTest {
 
     @Test
     void shouldCaptureUsesPathWithoutContextPath() {
-        TestloomProperties.RecorderProperties recorder = new TestloomProperties.RecorderProperties();
-        recorder.setIncludePaths(List.of("/api/**"));
-        recorder.setExcludePaths(List.of("/internal/**"));
+        TestloomConfig config = TestloomConfig.defaults();
+        config.getRecorder().setIncludePaths(List.of("/api/**"));
+        config.getRecorder().setExcludePaths(List.of("/internal/**"));
 
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/app/api/hello");
         request.setContextPath("/app");
 
-        assertThat(matcher.shouldCapture(request, recorder)).isTrue();
+        assertThat(matcher.shouldCapture(request, config)).isTrue();
     }
 
     @Test
     void shouldCaptureRespectsExcludePatterns() {
-        TestloomProperties.RecorderProperties recorder = new TestloomProperties.RecorderProperties();
-        recorder.setIncludePaths(List.of("/api/**"));
-        recorder.setExcludePaths(List.of("/api/internal/**"));
+        TestloomConfig config = TestloomConfig.defaults();
+        config.getRecorder().setIncludePaths(List.of("/api/**"));
+        config.getRecorder().setExcludePaths(List.of("/api/internal/**"));
 
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/internal/health");
 
-        assertThat(matcher.shouldCapture(request, recorder)).isFalse();
+        assertThat(matcher.shouldCapture(request, config)).isFalse();
     }
 
     @Test
     void shouldNotCaptureWhenIncludePatternsAreMissing() {
-        TestloomProperties.RecorderProperties recorder = new TestloomProperties.RecorderProperties();
-        recorder.setIncludePaths(List.of());
-        recorder.setExcludePaths(List.of());
+        TestloomConfig config = TestloomConfig.defaults();
+        config.getRecorder().setIncludePaths(List.of());
+        config.getRecorder().setExcludePaths(List.of());
 
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/hello");
 
-        assertThat(matcher.shouldCapture(request, recorder)).isFalse();
+        assertThat(matcher.shouldCapture(request, config)).isFalse();
     }
 
     @Test
     void shouldCaptureWhenIncludedAndNotExcluded() {
-        TestloomProperties.RecorderProperties recorder = new TestloomProperties.RecorderProperties();
-        recorder.setIncludePaths(List.of("/api/**"));
-        recorder.setExcludePaths(List.of("/internal/**"));
+        TestloomConfig config = TestloomConfig.defaults();
+        config.getRecorder().setIncludePaths(List.of("/api/**"));
+        config.getRecorder().setExcludePaths(List.of("/internal/**"));
 
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/orders");
 
-        assertThat(matcher.shouldCapture(request, recorder)).isTrue();
+        assertThat(matcher.shouldCapture(request, config)).isTrue();
     }
 
     @Test
     void shouldIgnoreNullPatternEntries() {
-        TestloomProperties.RecorderProperties recorder = new TestloomProperties.RecorderProperties();
-        recorder.setIncludePaths(Arrays.asList(null, "/api/**"));
-        recorder.setExcludePaths(Arrays.asList((String) null));
+        TestloomConfig config = TestloomConfig.defaults();
+        config.getRecorder().setIncludePaths(Arrays.asList(null, "/api/**"));
+        config.getRecorder().setExcludePaths(Arrays.asList((String) null));
 
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/orders");
 
-        assertThat(matcher.shouldCapture(request, recorder)).isTrue();
+        assertThat(matcher.shouldCapture(request, config)).isTrue();
     }
 
     @Test
     void shouldNotCaptureWhenRequestPathIsBlank() {
-        TestloomProperties.RecorderProperties recorder = new TestloomProperties.RecorderProperties();
-        recorder.setIncludePaths(List.of("/api/**"));
-        recorder.setExcludePaths(List.of());
+        TestloomConfig config = TestloomConfig.defaults();
+        config.getRecorder().setIncludePaths(List.of("/api/**"));
+        config.getRecorder().setExcludePaths(List.of());
 
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setRequestURI("");
 
-        assertThat(matcher.shouldCapture(request, recorder)).isFalse();
+        assertThat(matcher.shouldCapture(request, config)).isFalse();
+    }
+
+    @Test
+    void shouldFailFastWhenConfigIsNull() {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/hello");
+
+        NullPointerException error = assertThrows(
+                NullPointerException.class,
+                () -> matcher.shouldCapture(request, null)
+        );
+
+        assertThat(error).hasMessageThat().contains("config must not be null");
+    }
+
+    @Test
+    void shouldFailFastWhenRecorderSectionIsNull() {
+        TestloomConfig config = new TestloomConfig();
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/hello");
+
+        NullPointerException error = assertThrows(
+                NullPointerException.class,
+                () -> matcher.shouldCapture(request, config)
+        );
+
+        assertThat(error).hasMessageThat().contains("testloom.recorder must not be null");
     }
 }

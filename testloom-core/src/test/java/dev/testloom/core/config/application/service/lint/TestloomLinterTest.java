@@ -15,15 +15,15 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
  * Tests orchestration behavior of the top-level config linter.
  */
-class TestloomConfigLinterTest {
+class TestloomLinterTest {
     @Test
     void constructorRejectsNullSectionLinterList() {
-        assertThrows(NullPointerException.class, () -> new TestloomConfigLinter(null));
+        assertThrows(NullPointerException.class, () -> new TestloomLinter(null));
     }
 
     @Test
     void lintReturnsErrorWhenConfigIsNull() {
-        TestloomConfigLinter linter = new TestloomConfigLinter(List.of((config, errors) -> {
+        TestloomLinter linter = new TestloomLinter(List.of((config, errors) -> {
         }));
 
         List<String> errors = linter.lint(null);
@@ -33,15 +33,22 @@ class TestloomConfigLinterTest {
 
     @Test
     void lintOrThrowRejectsNullSourcePath() {
-        TestloomConfigLinter linter = new TestloomConfigLinter(List.of((config, errors) -> errors.add("boom")));
+        TestloomLinter linter = new TestloomLinter(List.of((config, errors) -> errors.add("boom")));
 
-        assertThrows(NullPointerException.class, () -> linter.lintOrThrow(new TestloomConfig(), null));
+        assertThrows(NullPointerException.class, () -> linter.lintOrThrow(new TestloomConfig(), (Path) null));
+    }
+
+    @Test
+    void lintOrThrowRejectsNullStringSource() {
+        TestloomLinter linter = new TestloomLinter(List.of((config, errors) -> errors.add("boom")));
+
+        assertThrows(NullPointerException.class, () -> linter.lintOrThrow(new TestloomConfig(), (String) null));
     }
 
     @Test
     void lintOrThrowIncludesAbsolutePathAndMessages(@TempDir Path tempDir) {
         Path source = tempDir.resolve("testloom.yaml");
-        TestloomConfigLinter linter = new TestloomConfigLinter(List.of(
+        TestloomLinter linter = new TestloomLinter(List.of(
                 (config, errors) -> errors.add("first"),
                 (config, errors) -> errors.add("second")
         ));
@@ -57,9 +64,22 @@ class TestloomConfigLinterTest {
     }
 
     @Test
+    void lintOrThrowIncludesStringSourceAndMessages() {
+        TestloomLinter linter = new TestloomLinter(List.of((config, errors) -> errors.add("boom")));
+
+        TestloomConfigValidationException error = assertThrows(
+                TestloomConfigValidationException.class,
+                () -> linter.lintOrThrow(new TestloomConfig(), "spring-boot properties")
+        );
+
+        assertThat(error).hasMessageThat().contains("spring-boot properties");
+        assertThat(error).hasMessageThat().contains("boom");
+    }
+
+    @Test
     void lintOrThrowDoesNothingWhenNoErrors(@TempDir Path tempDir) {
         Path source = tempDir.resolve("testloom.yaml");
-        TestloomConfigLinter linter = new TestloomConfigLinter(List.of((config, errors) -> {
+        TestloomLinter linter = new TestloomLinter(List.of((config, errors) -> {
         }));
 
         linter.lintOrThrow(new TestloomConfig(), source);
@@ -72,7 +92,7 @@ class TestloomConfigLinterTest {
 
         TestloomConfigValidationException error = assertThrows(
                 TestloomConfigValidationException.class,
-                () -> TestloomConfigLinter.defaultLinter().lintOrThrow(config, source)
+                () -> TestloomLinter.defaultLinter().lintOrThrow(config, source)
         );
 
         assertThat(error).hasMessageThat().contains("testloom.recorder must not be null.");
@@ -82,7 +102,7 @@ class TestloomConfigLinterTest {
     @Test
     void lintAggregatesErrorsFromAllSectionLinters() {
         List<String> trace = new ArrayList<>();
-        TestloomConfigLinter linter = new TestloomConfigLinter(List.of(
+        TestloomLinter linter = new TestloomLinter(List.of(
                 (config, errors) -> {
                     trace.add("first");
                     errors.add("a");

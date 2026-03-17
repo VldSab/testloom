@@ -36,6 +36,7 @@ Field rules:
 | `headers` | `object<string, string[]>` | no | Header name -> list of values |
 | `body` | `string` | yes | Captured only when `include-bodies=true` |
 | `contentType` | `string` | yes | Request content type |
+| `truncation` | `object` | no | Body truncation metadata |
 
 ## 3. Response Object
 
@@ -46,6 +47,15 @@ Field rules:
 | `body` | `string` | yes | Captured only when `include-bodies=true` |
 | `contentType` | `string` | yes | Response content type |
 | `durationMs` | `integer` | no | Processing duration in milliseconds, `>= 0` |
+| `truncation` | `object` | no | Body truncation metadata |
+
+Truncation object fields:
+
+| Field | Type | Nullable | Constraints |
+| --- | --- | --- | --- |
+| `bodyTruncated` | `boolean` | no | `true` only when size limit truncated body |
+| `originalSizeBytes` | `integer` | no | `>= 0` |
+| `capturedSizeBytes` | `integer` | no | `>= 0` and `<= originalSizeBytes` |
 
 ## 4. File Naming Contract
 
@@ -90,7 +100,12 @@ Collision policy:
       ]
     },
     "body": null,
-    "contentType": null
+    "contentType": null,
+    "truncation": {
+      "bodyTruncated": false,
+      "originalSizeBytes": 0,
+      "capturedSizeBytes": 0
+    }
   },
   "response": {
     "status": 200,
@@ -101,7 +116,12 @@ Collision policy:
     },
     "body": "{\"message\":\"hello\"}",
     "contentType": "application/json",
-    "durationMs": 12
+    "durationMs": 12,
+    "truncation": {
+      "bodyTruncated": false,
+      "originalSizeBytes": 19,
+      "capturedSizeBytes": 19
+    }
   }
 }
 ```

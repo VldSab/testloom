@@ -78,6 +78,53 @@ class JsonFileCaptureWriterTest {
     }
 
     @Test
+    void writeUsesCurrentTimestampWhenRecordedAtIsBlank(@TempDir Path tempDir) throws Exception {
+        Path outputDir = tempDir.resolve("captures");
+        JsonFileCaptureWriter writer = new JsonFileCaptureWriter(objectMapper, outputDir.toString());
+        CaptureEnvelope envelope = new CaptureEnvelope(
+                "0.1.0",
+                "   ",
+                "HTTP",
+                sampleEnvelope("/api/hello").request(),
+                sampleEnvelope("/api/hello").response()
+        );
+
+        writer.write(envelope);
+
+        String fileName = listFiles(outputDir).getFirst().getFileName().toString();
+        assertThat(fileName).matches("\\d{8}T\\d{9}Z_api_hello\\.json");
+    }
+
+    @Test
+    void writeSanitizesInvalidTimestampAndNullRequestPath(@TempDir Path tempDir) throws Exception {
+        Path outputDir = tempDir.resolve("captures");
+        JsonFileCaptureWriter writer = new JsonFileCaptureWriter(objectMapper, outputDir.toString());
+        CaptureEnvelope envelope = new CaptureEnvelope(
+                "0.1.0",
+                "bad/time",
+                "HTTP",
+                null,
+                sampleEnvelope("/api/hello").response()
+        );
+
+        writer.write(envelope);
+
+        String fileName = listFiles(outputDir).getFirst().getFileName().toString();
+        assertThat(fileName).isEqualTo("bad_time_root.json");
+    }
+
+    @Test
+    void writeUsesRootFallbackWhenPathSanitizesToEmpty(@TempDir Path tempDir) throws Exception {
+        Path outputDir = tempDir.resolve("captures");
+        JsonFileCaptureWriter writer = new JsonFileCaptureWriter(objectMapper, outputDir.toString());
+
+        writer.write(sampleEnvelope("////"));
+
+        String fileName = listFiles(outputDir).getFirst().getFileName().toString();
+        assertThat(fileName).isEqualTo("20260315T120000000Z_root.json");
+    }
+
+    @Test
     void writeThrowsTestloomCaptureExceptionWhenOutputPathIsRegularFile(@TempDir Path tempDir) throws Exception {
         Path outputFile = tempDir.resolve("not-a-dir");
         Files.writeString(outputFile, "x");
@@ -124,14 +171,16 @@ class JsonFileCaptureWriterTest {
                         "q=1",
                         Map.of("accept", List.of("application/json")),
                         null,
-                        "application/json"
+                        "application/json",
+                        new CaptureEnvelope.Truncation(false, 0, 0)
                 ),
                 new CaptureEnvelope.ResponseCapture(
                         200,
                         Map.of("content-type", List.of("application/json")),
                         "{\"message\":\"hello\"}",
                         "application/json",
-                        10
+                        10,
+                        new CaptureEnvelope.Truncation(false, 19, 19)
                 )
         );
     }
