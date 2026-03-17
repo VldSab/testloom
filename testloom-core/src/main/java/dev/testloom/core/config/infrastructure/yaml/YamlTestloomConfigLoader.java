@@ -2,7 +2,7 @@ package dev.testloom.core.config.infrastructure.yaml;
 
 import dev.testloom.core.config.application.port.TestloomConfigLoader;
 import dev.testloom.core.config.application.service.TestloomConfigNormalizer;
-import dev.testloom.core.config.application.service.lint.TestloomConfigLinter;
+import dev.testloom.core.config.application.service.lint.TestloomLinter;
 import dev.testloom.core.config.domain.exception.TestloomConfigException;
 import dev.testloom.core.config.domain.model.TestloomConfig;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -21,7 +21,7 @@ import java.nio.file.Path;
  */
 public final class YamlTestloomConfigLoader implements TestloomConfigLoader {
     private final ObjectMapper objectMapper;
-    private final TestloomConfigLinter linter;
+    private final TestloomLinter linter;
 
     /**
      * Creates a loader configured for Testloom YAML parsing.
@@ -31,11 +31,11 @@ public final class YamlTestloomConfigLoader implements TestloomConfigLoader {
                 JsonMapper.builder(new YAMLFactory())
                         .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
                         .build(),
-                TestloomConfigLinter.defaultLinter()
+                TestloomLinter.defaultLinter()
         );
     }
 
-    YamlTestloomConfigLoader(ObjectMapper objectMapper, TestloomConfigLinter linter) {
+    YamlTestloomConfigLoader(ObjectMapper objectMapper, TestloomLinter linter) {
         this.objectMapper = objectMapper;
         this.linter = linter;
     }

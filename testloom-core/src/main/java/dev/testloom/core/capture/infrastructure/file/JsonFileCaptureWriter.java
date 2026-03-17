@@ -58,6 +58,12 @@ public final class JsonFileCaptureWriter implements CaptureWriter {
         }
     }
 
+    /**
+     * Builds deterministic file-name base from capture metadata.
+     *
+     * <p>Route segment generation is intentionally fail-safe: missing/blank request path
+     * falls back to {@code root} instead of failing capture persistence.
+     */
     private String buildBaseFileName(CaptureEnvelope envelope) {
         String timestamp = normalizeTimestamp(envelope.recordedAt());
         String route = sanitizeRoute(envelope.request() == null ? null : envelope.request().path());
@@ -85,6 +91,11 @@ public final class JsonFileCaptureWriter implements CaptureWriter {
         }
     }
 
+    /**
+     * Sanitizes route value for file naming.
+     *
+     * <p>{@code null} and blank routes are mapped to {@code root} by design.
+     */
     private String sanitizeRoute(String rawPath) {
         if (rawPath == null || rawPath.isBlank()) {
             return "root";

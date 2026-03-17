@@ -11,11 +11,11 @@ import java.util.Objects;
 /**
  * Main linter that orchestrates all section-specific linters.
  */
-public final class TestloomConfigLinter {
-    private static final TestloomConfigLinter DEFAULT_LINTER = createDefault();
+public final class TestloomLinter {
+    private static final TestloomLinter DEFAULT_LINTER = createDefault();
     private final List<ConfigSectionLinter<TestloomConfig>> sectionLinters;
 
-    public TestloomConfigLinter(List<ConfigSectionLinter<TestloomConfig>> sectionLinters) {
+    public TestloomLinter(List<ConfigSectionLinter<TestloomConfig>> sectionLinters) {
         this.sectionLinters = List.copyOf(Objects.requireNonNull(sectionLinters, "sectionLinters must not be null"));
     }
 
@@ -24,8 +24,24 @@ public final class TestloomConfigLinter {
      *
      * @return default linter
      */
-    public static TestloomConfigLinter defaultLinter() {
+    public static TestloomLinter defaultLinter() {
         return DEFAULT_LINTER;
+    }
+
+    /**
+     * Lints config and throws if lint errors are found.
+     *
+     * @param config config to lint
+     * @param source source identifier used in lint error messages
+     */
+    public void lintOrThrow(TestloomConfig config, String source) {
+        Objects.requireNonNull(source, "source must not be null");
+        List<String> errors = lint(config);
+        if (!errors.isEmpty()) {
+            throw new TestloomConfigValidationException(
+                    "Invalid testloom config at " + source + ": " + String.join("; ", errors)
+            );
+        }
     }
 
     /**
@@ -35,13 +51,7 @@ public final class TestloomConfigLinter {
      * @param source source path used in lint error messages
      */
     public void lintOrThrow(TestloomConfig config, Path source) {
-        Objects.requireNonNull(source, "source must not be null");
-        List<String> errors = lint(config);
-        if (!errors.isEmpty()) {
-            throw new TestloomConfigValidationException(
-                    "Invalid testloom config at " + source.toAbsolutePath() + ": " + String.join("; ", errors)
-            );
-        }
+        lintOrThrow(config, Objects.requireNonNull(source, "source must not be null").toAbsolutePath().toString());
     }
 
     List<String> lint(TestloomConfig config) {
@@ -57,11 +67,11 @@ public final class TestloomConfigLinter {
         return errors;
     }
 
-    private static TestloomConfigLinter createDefault() {
+    private static TestloomLinter createDefault() {
         RecorderConfigLinter recorderConfigLinter = new RecorderConfigLinter();
         RedactionConfigLinter redactionConfigLinter = new RedactionConfigLinter();
 
-        return new TestloomConfigLinter(List.of(
+        return new TestloomLinter(List.of(
                 (config, errors) -> recorderConfigLinter.lint(config.getRecorder(), errors),
                 (config, errors) -> redactionConfigLinter.lint(config.getRedaction(), errors)
         ));

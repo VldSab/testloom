@@ -10,9 +10,13 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Set;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Tests YAML config loading, normalization, and validation rules.
@@ -73,6 +77,33 @@ class YamlTestloomConfigLoaderTest {
         Path configPath = writeConfig(tempDir, "{}");
         TestloomConfigException error = assertThrows(TestloomConfigException.class, () -> loader.load(configPath));
         assertThat(error).hasMessageThat().contains("top-level 'testloom' key");
+    }
+
+    @Test
+    void strictLoadWrapsIoExceptionWhenFileIsNotReadable(@TempDir Path tempDir) throws Exception {
+        assumeTrue(Files.getFileStore(tempDir).supportsFileAttributeView("posix"));
+
+        Path configPath = writeConfig(tempDir, """
+                testloom:
+                  recorder:
+                    enabled: true
+                    mode: local
+                    output-dir: ./.testloom/captures
+                    include-bodies: true
+                    max-body-size-bytes: 65536
+                    include-paths: ["/api/**"]
+                  redaction:
+                    mask: "***"
+                """);
+
+        Set<PosixFilePermission> originalPermissions = Files.getPosixFilePermissions(configPath);
+        Files.setPosixFilePermissions(configPath, PosixFilePermissions.fromString("---------"));
+        try {
+            TestloomConfigException error = assertThrows(TestloomConfigException.class, () -> loader.load(configPath));
+            assertThat(error).hasMessageThat().contains("Failed to read YAML config");
+        } finally {
+            Files.setPosixFilePermissions(configPath, originalPermissions);
+        }
     }
 
     @Test
@@ -274,6 +305,9 @@ class YamlTestloomConfigLoaderTest {
         Path configPath = writeConfig(tempDir, """
                 testloom:
                   recorder:
+                    mode: local
+                    output-dir: ./.testloom/captures
+                    include-bodies: true
                     max-body-size-bytes: -5
                   redaction:
                     mask: ""

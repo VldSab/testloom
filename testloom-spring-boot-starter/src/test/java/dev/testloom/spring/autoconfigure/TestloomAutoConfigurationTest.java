@@ -5,7 +5,10 @@ import dev.testloom.core.capture.application.port.CaptureRecorder;
 import dev.testloom.core.capture.application.port.CaptureWriter;
 import dev.testloom.core.capture.application.service.SafeCaptureRecorder;
 import dev.testloom.core.capture.infrastructure.file.JsonFileCaptureWriter;
+import dev.testloom.core.config.application.port.TestloomConfigLoader;
+import dev.testloom.core.config.domain.model.TestloomConfig;
 import dev.testloom.spring.capture.LoggingCaptureFailureHandler;
+import dev.testloom.spring.mvc.MvcCaptureEnvelopeFactory;
 import dev.testloom.spring.mvc.MvcCaptureFilter;
 import dev.testloom.spring.mvc.MvcCapturePathMatcher;
 import org.junit.jupiter.api.Test;
@@ -14,6 +17,9 @@ import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
+
+import java.nio.file.Path;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -31,10 +37,11 @@ class TestloomAutoConfigurationTest {
     @Test
     void enabledRecorderRegistersCaptureBeans() {
         contextRunner
-                .withPropertyValues("testloom.recorder.enabled=true")
+                .withBean(TestloomConfig.class, TestloomAutoConfigurationTest::enabledConfig)
                 .run(context -> {
                     assertThat(context.getBeansOfType(CaptureWriter.class)).hasSize(1);
                     assertThat(context.getBeansOfType(CaptureRecorder.class)).hasSize(1);
+                    assertThat(context.getBeansOfType(MvcCaptureEnvelopeFactory.class)).hasSize(1);
                     assertThat(context.getBeansOfType(MvcCaptureFilter.class)).hasSize(1);
                 });
     }
@@ -42,7 +49,7 @@ class TestloomAutoConfigurationTest {
     @Test
     void enabledRecorderRegistersExpectedDefaultImplementations() {
         contextRunner
-                .withPropertyValues("testloom.recorder.enabled=true")
+                .withBean(TestloomConfig.class, TestloomAutoConfigurationTest::enabledConfig)
                 .run(context -> {
                     assertThat(context.getBean(CaptureWriter.class)).isInstanceOf(JsonFileCaptureWriter.class);
                     assertThat(context.getBean(CaptureFailureHandler.class)).isInstanceOf(LoggingCaptureFailureHandler.class);
@@ -51,13 +58,13 @@ class TestloomAutoConfigurationTest {
     }
 
     @Test
-    void disabledRecorderSkipsCaptureBeans() {
+    void configBeanIsAlwaysLoadedEvenWhenRecorderDisabled() {
         contextRunner
-                .withPropertyValues("testloom.recorder.enabled=false")
+                .withBean(TestloomConfig.class, TestloomAutoConfigurationTest::disabledConfig)
                 .run(context -> {
-                    assertThat(context.getBeansOfType(CaptureWriter.class)).isEmpty();
-                    assertThat(context.getBeansOfType(CaptureRecorder.class)).isEmpty();
-                    assertThat(context.getBeansOfType(MvcCaptureFilter.class)).isEmpty();
+                    assertThat(context.getBeansOfType(CaptureWriter.class)).hasSize(1);
+                    assertThat(context.getBeansOfType(CaptureRecorder.class)).hasSize(1);
+                    assertThat(context.getBeansOfType(MvcCaptureFilter.class)).hasSize(1);
                 });
     }
 
@@ -65,7 +72,7 @@ class TestloomAutoConfigurationTest {
     void customCaptureWriterOverridesDefaultWriterBean() {
         CaptureWriter customWriter = envelope -> { };
         contextRunner
-                .withPropertyValues("testloom.recorder.enabled=true")
+                .withBean(TestloomConfig.class, TestloomAutoConfigurationTest::enabledConfig)
                 .withBean(CaptureWriter.class, () -> customWriter)
                 .run(context -> assertThat(context.getBean(CaptureWriter.class)).isSameInstanceAs(customWriter));
     }
@@ -74,7 +81,7 @@ class TestloomAutoConfigurationTest {
     void customFailureHandlerOverridesDefaultFailureHandlerBean() {
         CaptureFailureHandler customHandler = (envelope, exception) -> { };
         contextRunner
-                .withPropertyValues("testloom.recorder.enabled=true")
+                .withBean(TestloomConfig.class, TestloomAutoConfigurationTest::enabledConfig)
                 .withBean(CaptureFailureHandler.class, () -> customHandler)
                 .run(context -> assertThat(context.getBean(CaptureFailureHandler.class)).isSameInstanceAs(customHandler));
     }
@@ -83,7 +90,7 @@ class TestloomAutoConfigurationTest {
     void customCaptureRecorderOverridesDefaultRecorderBean() {
         CaptureRecorder customRecorder = envelope -> { };
         contextRunner
-                .withPropertyValues("testloom.recorder.enabled=true")
+                .withBean(TestloomConfig.class, TestloomAutoConfigurationTest::enabledConfig)
                 .withBean(CaptureRecorder.class, () -> customRecorder)
                 .run(context -> assertThat(context.getBean(CaptureRecorder.class)).isSameInstanceAs(customRecorder));
     }
@@ -92,7 +99,7 @@ class TestloomAutoConfigurationTest {
     void customPathMatcherOverridesDefaultMatcherBean() {
         MvcCapturePathMatcher matcher = (request, recorder) -> true;
         contextRunner
-                .withPropertyValues("testloom.recorder.enabled=true")
+                .withBean(TestloomConfig.class, TestloomAutoConfigurationTest::enabledConfig)
                 .withBean(MvcCapturePathMatcher.class, () -> matcher)
                 .run(context -> assertThat(context.getBean(MvcCapturePathMatcher.class)).isSameInstanceAs(matcher));
     }
@@ -100,7 +107,7 @@ class TestloomAutoConfigurationTest {
     @Test
     void filterRegistrationBeanHasExpectedNameOrderAndPatterns() {
         contextRunner
-                .withPropertyValues("testloom.recorder.enabled=true")
+                .withBean(TestloomConfig.class, TestloomAutoConfigurationTest::enabledConfig)
                 .run(context -> {
                     FilterRegistrationBean<?> registrationBean = context.getBean(
                             "testloomMvcCaptureFilterRegistration",
@@ -120,7 +127,7 @@ class TestloomAutoConfigurationTest {
                         JacksonAutoConfiguration.class,
                         TestloomAutoConfiguration.class
                 ))
-                .withPropertyValues("testloom.recorder.enabled=true")
+                .withBean(TestloomConfig.class, TestloomAutoConfigurationTest::enabledConfig)
                 .run(context -> {
                     assertThat(context.getBeansOfType(CaptureWriter.class)).hasSize(1);
                     assertThat(context.getBeansOfType(CaptureRecorder.class)).hasSize(1);
@@ -136,7 +143,38 @@ class TestloomAutoConfigurationTest {
                         TestloomAutoConfiguration.class,
                         TestloomMvcAutoConfiguration.class
                 ))
-                .withPropertyValues("testloom.recorder.enabled=true")
+                .withBean(TestloomConfig.class, TestloomAutoConfigurationTest::enabledConfig)
                 .run(context -> assertThat(context.getBeansOfType(MvcCaptureFilter.class)).isEmpty());
     }
+
+    @Test
+    void testloomConfigBeanDelegatesToLoaderWithDefaultPath() {
+        TestloomAutoConfiguration configuration = new TestloomAutoConfiguration();
+        TestloomConfig expected = enabledConfig();
+        AtomicReference<Path> seenPath = new AtomicReference<>();
+        TestloomConfigLoader loader = path -> {
+            seenPath.set(path);
+            return expected;
+        };
+
+        TestloomConfig actual = configuration.testloomConfig(loader);
+
+        assertThat(actual).isSameInstanceAs(expected);
+        assertThat(seenPath.get()).isEqualTo(Path.of("testloom.yaml"));
+    }
+
+    private static TestloomConfig enabledConfig() {
+        TestloomConfig config = TestloomConfig.defaults();
+        config.getRecorder().setEnabled(true);
+        config.getRecorder().setIncludeBodies(true);
+        config.getRecorder().setMaxBodySizeBytes(1024);
+        return config;
+    }
+
+    private static TestloomConfig disabledConfig() {
+        TestloomConfig config = TestloomConfig.defaults();
+        config.getRecorder().setEnabled(false);
+        return config;
+    }
+
 }

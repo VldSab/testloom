@@ -32,8 +32,14 @@ class LoggingCaptureFailureHandlerTest {
                 "0.1.0",
                 "2026-03-15T12:00:00Z",
                 "HTTP",
-                new CaptureEnvelope.RequestCapture(null, null, null, Map.of(), null, null),
-                new CaptureEnvelope.ResponseCapture(200, Map.of(), null, null, 1)
+                new CaptureEnvelope.RequestCapture(
+                        null, null, null, Map.of(), null, null,
+                        new CaptureEnvelope.Truncation(false, 0, 0)
+                ),
+                new CaptureEnvelope.ResponseCapture(
+                        200, Map.of(), null, null, 1,
+                        new CaptureEnvelope.Truncation(false, 0, 0)
+                )
         );
 
         assertDoesNotThrow(() -> handler.onCaptureFailure(envelope, new RuntimeException("boom")));
@@ -45,8 +51,14 @@ class LoggingCaptureFailureHandlerTest {
                 "0.1.0",
                 "2026-03-15T12:00:00Z",
                 "HTTP",
-                new CaptureEnvelope.RequestCapture("GET", "/api/hello", null, Map.of("accept", List.of("*/*")), null, null),
-                new CaptureEnvelope.ResponseCapture(200, Map.of(), null, null, 1)
+                new CaptureEnvelope.RequestCapture(
+                        "GET", "/api/hello", null, Map.of("accept", List.of("*/*")), null, null,
+                        new CaptureEnvelope.Truncation(false, 0, 0)
+                ),
+                new CaptureEnvelope.ResponseCapture(
+                        200, Map.of(), null, null, 1,
+                        new CaptureEnvelope.Truncation(false, 0, 0)
+                )
         );
 
         assertDoesNotThrow(() -> handler.onCaptureFailure(envelope, new RuntimeException("boom")));

@@ -3,6 +3,7 @@ package dev.testloom.core.config.application.service;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.function.Supplier;
 
 /**
  * Provides built-in configuration templates used by CLI commands.
@@ -24,7 +25,11 @@ public final class TestloomConfigTemplates {
     }
 
     private static String loadTemplate() {
-        try (InputStream inputStream = TestloomConfigTemplates.class.getResourceAsStream(TEMPLATE_RESOURCE)) {
+        return loadTemplate(() -> TestloomConfigTemplates.class.getResourceAsStream(TEMPLATE_RESOURCE));
+    }
+
+    static String loadTemplate(Supplier<InputStream> streamSupplier) {
+        try (InputStream inputStream = streamSupplier.get()) {
             if (inputStream == null) {
                 throw new IllegalStateException("Missing config template resource: " + TEMPLATE_RESOURCE);
             }

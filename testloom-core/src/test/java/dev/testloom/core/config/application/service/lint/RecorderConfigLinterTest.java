@@ -29,6 +29,7 @@ class RecorderConfigLinterTest {
         RecorderConfig recorder = new RecorderConfig();
         recorder.setMode(null);
         recorder.setOutputDir("   ");
+        recorder.setIncludeBodies(true);
         recorder.setMaxBodySizeBytes(0);
 
         List<String> errors = new ArrayList<>();
@@ -37,9 +38,23 @@ class RecorderConfigLinterTest {
         assertThat(errors).containsAtLeast(
                 "testloom.recorder.mode must be one of LOCAL, DEV, STAGING.",
                 "testloom.recorder.output-dir must not be blank.",
-                "testloom.recorder.max-body-size-bytes must be > 0."
+                "testloom.recorder.max-body-size-bytes must be > 0 when include-bodies=true."
         );
         assertThat(errors).hasSize(3);
+    }
+
+    @Test
+    void nonPositiveBodyLimitIsAllowedWhenBodiesAreDisabled() {
+        RecorderConfig recorder = new RecorderConfig();
+        recorder.setMode(RecorderMode.LOCAL);
+        recorder.setOutputDir("./.testloom/captures");
+        recorder.setIncludeBodies(false);
+        recorder.setMaxBodySizeBytes(0);
+
+        List<String> errors = new ArrayList<>();
+        linter.lint(recorder, errors);
+
+        assertThat(errors).isEmpty();
     }
 
     @Test
