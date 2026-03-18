@@ -80,10 +80,35 @@ require_contains() {
   fi
 }
 
+require_min_count() {
+  local pattern="$1"
+  local label="$2"
+  local min_count="$3"
+  local actual_count
+  actual_count="$(grep -o "$pattern" <<<"$CAPTURE_CONTENT" | wc -l | tr -d ' ')"
+  if (( actual_count < min_count )); then
+    echo "ERROR: missing required field occurrences for $label: expected >= $min_count, got $actual_count"
+    exit 1
+  fi
+}
+
+require_contains '"schemaVersion"' "schemaVersion"
+require_contains '"transport"' "transport"
 require_contains '"method"' "request.method"
 require_contains '"path"' "request.path"
+require_contains '"headers"' "request.headers/response.headers"
+require_contains '"truncation"' "request.truncation/response.truncation"
 require_contains '"status"' "response.status"
+require_contains '"durationMs"' "response.durationMs"
 require_contains '"recordedAt"' "recordedAt"
+require_contains '"bodyTruncated"' "truncation.bodyTruncated"
+require_contains '"originalSizeBytes"' "truncation.originalSizeBytes"
+require_contains '"capturedSizeBytes"' "truncation.capturedSizeBytes"
+
+require_min_count '"truncation"' "truncation blocks" 2
+require_min_count '"bodyTruncated"' "bodyTruncated fields" 2
+require_min_count '"originalSizeBytes"' "originalSizeBytes fields" 2
+require_min_count '"capturedSizeBytes"' "capturedSizeBytes fields" 2
 
 echo "Capture file: $CAPTURE_FILE"
 cat "$CAPTURE_FILE"

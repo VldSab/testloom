@@ -14,8 +14,9 @@ public interface MvcCapturePathMatcher {
      * @param config loaded Testloom config
      * @return {@code true} when the request should be captured
      *
-     * <p>Path-matching implementations are expected to be fail-closed:
-     * if include/exclude pattern sets do not produce a match, capture must be skipped.
+     * <p>Path-matching implementations are expected to be fail-closed: include patterns
+     * must match first, then exclude patterns take precedence and suppress capture.
+     * Empty or invalid patterns should be treated as non-matches.
      * @throws NullPointerException when request, config, or mandatory config sections are missing
      */
     boolean shouldCapture(HttpServletRequest request, TestloomConfig config);

@@ -1,8 +1,14 @@
 package dev.testloom.spring.mvc;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.testloom.core.capture.application.port.CaptureRecorder;
 import dev.testloom.core.capture.domain.model.CaptureEnvelope;
 import dev.testloom.core.config.domain.model.TestloomConfig;
+import dev.testloom.core.redaction.application.service.PolicyBasedCaptureRedactor;
+import dev.testloom.core.config.domain.model.RedactionAction;
+import dev.testloom.core.config.domain.model.RedactionMatcherType;
+import dev.testloom.core.config.domain.model.RedactionRule;
+import dev.testloom.core.config.domain.model.RedactionTargetType;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletResponse;
@@ -13,6 +19,7 @@ import org.springframework.util.StreamUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -322,6 +329,53 @@ class MvcCaptureFilterTest {
         assertThat(error).hasMessageThat().contains("testloom.recorder must not be null");
     }
 
+    @Test
+    void appliesRedactionBeforeRecorderPersistence() throws Exception {
+        TestloomConfig config = defaultConfig();
+        config.getRedaction().setHeaderDefaultAction(RedactionAction.REMOVE);
+        config.getRedaction().setQueryParamDefaultAction(RedactionAction.KEEP);
+        config.getRedaction().setJsonFieldDefaultAction(RedactionAction.KEEP);
+        config.getRedaction().setRules(List.of(
+                rule(RedactionTargetType.HEADER, "authorization", RedactionMatcherType.EXACT, RedactionAction.MASK, null),
+                rule(RedactionTargetType.JSON_FIELD, "password", RedactionMatcherType.EXACT, RedactionAction.MASK, null),
+                rule(RedactionTargetType.QUERY_PARAM, "token", RedactionMatcherType.EXACT, RedactionAction.MASK, null)
+        ));
+
+        CapturingRecorder recorder = new CapturingRecorder();
+        MvcCaptureEnvelopeFactory envelopeFactory = new MvcCaptureEnvelopeFactory(config, Clock.systemUTC());
+        MvcCaptureFilter filter = new MvcCaptureFilter(
+                recorder,
+                config,
+                new AntPatternMvcCapturePathMatcher(),
+                envelopeFactory,
+                new PolicyBasedCaptureRedactor(new ObjectMapper(), config.getRedaction())
+        );
+
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/orders");
+        request.setQueryString("token=abc&page=1");
+        request.setContentType("application/json");
+        request.addHeader("authorization", "Bearer real-token");
+        request.addHeader("cookie", "session=abc");
+        request.setContent("{\"password\":\"secret\",\"ok\":1}".getBytes(StandardCharsets.UTF_8));
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        FilterChain chain = (servletRequest, servletResponse) -> {
+            StreamUtils.copyToByteArray(servletRequest.getInputStream());
+            servletResponse.setContentType("application/json");
+            ((HttpServletResponse) servletResponse).addHeader("set-cookie", "server=1");
+            servletResponse.getOutputStream().write("{\"password\":\"hidden\"}".getBytes(StandardCharsets.UTF_8));
+            servletResponse.flushBuffer();
+        };
+
+        filter.doFilter(request, response, chain);
+
+        CaptureEnvelope envelope = recorder.lastEnvelope.get();
+        assertThat(envelope).isNotNull();
+        assertThat(envelope.request().query()).isEqualTo("token=***&page=1");
+        assertThat(envelope.request().headers().containsKey("cookie")).isFalse();
+        assertThat(envelope.request().headers().get("authorization")).containsExactly("***");
+        assertThat(envelope.request().body()).contains("\"password\":\"***\"");
+    }
+
     private static TestloomConfig defaultConfig() {
         TestloomConfig config = TestloomConfig.defaults();
         config.getRecorder().setEnabled(true);
@@ -330,6 +384,22 @@ class MvcCaptureFilterTest {
         config.getRecorder().setIncludeBodies(true);
         config.getRecorder().setMaxBodySizeBytes(1024);
         return config;
+    }
+
+    private static RedactionRule rule(
+            RedactionTargetType type,
+            String target,
+            RedactionMatcherType matcher,
+            RedactionAction action,
+            String replacement
+    ) {
+        RedactionRule rule = new RedactionRule();
+        rule.setType(type);
+        rule.setTarget(target);
+        rule.setMatcher(matcher);
+        rule.setAction(action);
+        rule.setReplacement(replacement);
+        return rule;
     }
 
     private static final class CapturingRecorder implements CaptureRecorder {

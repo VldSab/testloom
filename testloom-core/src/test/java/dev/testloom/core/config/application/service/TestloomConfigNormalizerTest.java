@@ -44,7 +44,7 @@ class TestloomConfigNormalizerTest {
         recorder.setOutputDir("   ");
         recorder.setIncludeBodies(false);
         recorder.setMaxBodySizeBytes(256);
-        recorder.setIncludePaths(new ArrayList<>(List.of("/api/**", " /api/** ", " /orders/** ")));
+        recorder.setIncludePaths(new ArrayList<>(List.of("/api/**", " /api/** ", "   ", " /orders/** ")));
         recorder.setExcludePaths(new ArrayList<>(List.of(" /actuator/** ", "/actuator/**", "/health/**")));
 
         TestloomConfig source = new TestloomConfig();
@@ -83,9 +83,9 @@ class TestloomConfigNormalizerTest {
 
         RedactionConfig redaction = new RedactionConfig();
         redaction.setMask("  ###  ");
-        redaction.setHeaders(new ArrayList<>(List.of(" Authorization ", "authorization", "X-API-Key")));
-        redaction.setJsonFields(new ArrayList<>(List.of("password", " password ", " secret ")));
-        redaction.setQueryParams(new ArrayList<>(List.of("Token", " token ", "api_key")));
+        redaction.setHeaderDefaultAction(RedactionAction.REMOVE);
+        redaction.setJsonFieldDefaultAction(RedactionAction.KEEP);
+        redaction.setQueryParamDefaultAction(RedactionAction.MASK);
         redaction.setRules(new ArrayList<>(Arrays.asList(headerRule, null, queryRule, jsonRule)));
 
         TestloomConfig source = new TestloomConfig();
@@ -95,9 +95,9 @@ class TestloomConfigNormalizerTest {
         TestloomConfig normalized = TestloomConfigNormalizer.normalize(source);
 
         assertThat(normalized.getRedaction().getMask()).isEqualTo("###");
-        assertThat(normalized.getRedaction().getHeaders()).containsExactly("authorization", "x-api-key").inOrder();
-        assertThat(normalized.getRedaction().getJsonFields()).containsExactly("password", "secret").inOrder();
-        assertThat(normalized.getRedaction().getQueryParams()).containsExactly("token", "api_key").inOrder();
+        assertThat(normalized.getRedaction().getHeaderDefaultAction()).isEqualTo(RedactionAction.REMOVE);
+        assertThat(normalized.getRedaction().getJsonFieldDefaultAction()).isEqualTo(RedactionAction.KEEP);
+        assertThat(normalized.getRedaction().getQueryParamDefaultAction()).isEqualTo(RedactionAction.MASK);
         assertThat(normalized.getRedaction().getRules()).hasSize(4);
         assertThat(normalized.getRedaction().getRules().get(0).getTarget()).isEqualTo("authorization");
         assertThat(normalized.getRedaction().getRules().get(1)).isNull();
@@ -108,11 +108,11 @@ class TestloomConfigNormalizerTest {
     }
 
     @Test
-    void normalizeDropsNullAndBlankStringEntries() {
+    void normalizePreservesNullDefaultActionsForLinting() {
         RedactionConfig redaction = new RedactionConfig();
-        redaction.setHeaders(new ArrayList<>(Arrays.asList("  ", "Authorization", null)));
-        redaction.setJsonFields(new ArrayList<>(List.of("", "password", "   ")));
-        redaction.setQueryParams(new ArrayList<>(Arrays.asList(null, " token ")));
+        redaction.setHeaderDefaultAction(null);
+        redaction.setJsonFieldDefaultAction(null);
+        redaction.setQueryParamDefaultAction(null);
 
         TestloomConfig source = new TestloomConfig();
         source.setRecorder(new RecorderConfig());
@@ -120,9 +120,9 @@ class TestloomConfigNormalizerTest {
 
         TestloomConfig normalized = TestloomConfigNormalizer.normalize(source);
 
-        assertThat(normalized.getRedaction().getHeaders()).containsExactly("authorization");
-        assertThat(normalized.getRedaction().getJsonFields()).containsExactly("password");
-        assertThat(normalized.getRedaction().getQueryParams()).containsExactly("token");
+        assertThat(normalized.getRedaction().getHeaderDefaultAction()).isNull();
+        assertThat(normalized.getRedaction().getJsonFieldDefaultAction()).isNull();
+        assertThat(normalized.getRedaction().getQueryParamDefaultAction()).isNull();
         assertThat(normalized.getRedaction().getRules()).isEmpty();
     }
 }

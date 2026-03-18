@@ -77,6 +77,38 @@ class MvcBodyCaptureServiceTest {
     }
 
     @Test
+    void unknownDeclaredLengthFallsBackToCachedLength() {
+        byte[] bytes = "abcde".getBytes(StandardCharsets.UTF_8);
+
+        MvcBodyCaptureService.MvcCapturedBody captured = service.capture(
+                bytes,
+                StandardCharsets.UTF_8,
+                -1,
+                true,
+                16
+        );
+
+        assertThat(captured.body()).isEqualTo("abcde");
+        assertThat(captured.truncation()).isEqualTo(new CaptureEnvelope.Truncation(false, 5, 5));
+    }
+
+    @Test
+    void declaredLengthLowerThanCachedLengthUsesCachedLength() {
+        byte[] bytes = "abcdef".getBytes(StandardCharsets.UTF_8);
+
+        MvcBodyCaptureService.MvcCapturedBody captured = service.capture(
+                bytes,
+                StandardCharsets.UTF_8,
+                2,
+                true,
+                16
+        );
+
+        assertThat(captured.body()).isEqualTo("abcdef");
+        assertThat(captured.truncation()).isEqualTo(new CaptureEnvelope.Truncation(false, 6, 6));
+    }
+
+    @Test
     void includeBodiesTrueRejectsNonPositiveLimit() {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,

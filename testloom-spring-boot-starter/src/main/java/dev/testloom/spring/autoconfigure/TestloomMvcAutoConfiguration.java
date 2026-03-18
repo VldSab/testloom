@@ -2,6 +2,7 @@ package dev.testloom.spring.autoconfigure;
 
 import dev.testloom.core.capture.application.port.CaptureRecorder;
 import dev.testloom.core.config.domain.model.TestloomConfig;
+import dev.testloom.core.redaction.application.port.CaptureRedactor;
 import dev.testloom.spring.mvc.AntPatternMvcCapturePathMatcher;
 import dev.testloom.spring.mvc.MvcCaptureEnvelopeFactory;
 import dev.testloom.spring.mvc.MvcCaptureFilter;
@@ -71,8 +72,9 @@ public class TestloomMvcAutoConfiguration {
     public MvcCaptureFilter mvcCaptureFilter(CaptureRecorder captureRecorder,
                                              TestloomConfig config,
                                              MvcCapturePathMatcher pathMatcher,
-                                             MvcCaptureEnvelopeFactory envelopeFactory) {
-        return new MvcCaptureFilter(captureRecorder, config, pathMatcher, envelopeFactory);
+                                             MvcCaptureEnvelopeFactory envelopeFactory,
+                                             CaptureRedactor captureRedactor) {
+        return new MvcCaptureFilter(captureRecorder, config, pathMatcher, envelopeFactory, captureRedactor);
     }
 
     /**

@@ -9,6 +9,8 @@ import dev.testloom.core.capture.infrastructure.file.JsonFileCaptureWriter;
 import dev.testloom.core.config.application.port.TestloomConfigLoader;
 import dev.testloom.core.config.domain.model.TestloomConfig;
 import dev.testloom.core.config.infrastructure.yaml.YamlTestloomConfigLoader;
+import dev.testloom.core.redaction.application.port.CaptureRedactor;
+import dev.testloom.core.redaction.application.service.PolicyBasedCaptureRedactor;
 import dev.testloom.spring.capture.LoggingCaptureFailureHandler;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -57,6 +59,19 @@ public class TestloomAutoConfiguration {
     @ConditionalOnMissingBean
     public CaptureWriter captureWriter(ObjectMapper objectMapper, TestloomConfig config) {
         return new JsonFileCaptureWriter(objectMapper, config.getRecorder().getOutputDir());
+    }
+
+    /**
+     * Creates capture redactor used before persistence.
+     *
+     * @param objectMapper jackson mapper used for JSON redaction
+     * @param config loaded testloom config
+     * @return capture redactor
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public CaptureRedactor captureRedactor(ObjectMapper objectMapper, TestloomConfig config) {
+        return new PolicyBasedCaptureRedactor(objectMapper, config.getRedaction());
     }
 
     /**

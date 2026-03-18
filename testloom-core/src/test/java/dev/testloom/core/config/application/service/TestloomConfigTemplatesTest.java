@@ -20,6 +20,9 @@ class TestloomConfigTemplatesTest {
         assertThat(yaml).contains("testloom:");
         assertThat(yaml).contains("recorder:");
         assertThat(yaml).contains("redaction:");
+        assertThat(yaml).contains("header-default-action:");
+        assertThat(yaml).contains("query-param-default-action:");
+        assertThat(yaml).contains("json-field-default-action:");
         assertThat(yaml).contains("rules:");
     }
 

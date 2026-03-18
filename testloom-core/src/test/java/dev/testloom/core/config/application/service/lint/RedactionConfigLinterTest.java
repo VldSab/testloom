@@ -47,6 +47,9 @@ class RedactionConfigLinterTest {
         linter.lint(redaction, errors);
 
         assertThat(errors).contains("testloom.redaction.mask must not be blank.");
+        assertThat(errors).contains("testloom.redaction.header-default-action must not be null.");
+        assertThat(errors).contains("testloom.redaction.query-param-default-action must not be null.");
+        assertThat(errors).contains("testloom.redaction.json-field-default-action must not be null.");
         assertThat(errors).contains("testloom.redaction.rules[0] must not be null.");
         assertThat(errors).contains("testloom.redaction.rules[1].type must not be null.");
         assertThat(errors).contains("testloom.redaction.rules[1].matcher must not be null.");
@@ -65,7 +68,31 @@ class RedactionConfigLinterTest {
 
         RedactionConfig redaction = new RedactionConfig();
         redaction.setMask("***");
+        redaction.setHeaderDefaultAction(RedactionAction.MASK);
+        redaction.setQueryParamDefaultAction(RedactionAction.MASK);
+        redaction.setJsonFieldDefaultAction(RedactionAction.MASK);
         redaction.setRules(List.of(regexRule));
+
+        List<String> errors = new ArrayList<>();
+        linter.lint(redaction, errors);
+
+        assertThat(errors).isEmpty();
+    }
+
+    @Test
+    void keepActionIsValid() {
+        RedactionRule keepRule = new RedactionRule();
+        keepRule.setType(RedactionTargetType.HEADER);
+        keepRule.setMatcher(RedactionMatcherType.EXACT);
+        keepRule.setAction(RedactionAction.KEEP);
+        keepRule.setTarget("content-type");
+
+        RedactionConfig redaction = new RedactionConfig();
+        redaction.setMask("***");
+        redaction.setHeaderDefaultAction(RedactionAction.MASK);
+        redaction.setQueryParamDefaultAction(RedactionAction.MASK);
+        redaction.setJsonFieldDefaultAction(RedactionAction.MASK);
+        redaction.setRules(List.of(keepRule));
 
         List<String> errors = new ArrayList<>();
         linter.lint(redaction, errors);
@@ -83,6 +110,9 @@ class RedactionConfigLinterTest {
 
         RedactionConfig redaction = new RedactionConfig();
         redaction.setMask("***");
+        redaction.setHeaderDefaultAction(RedactionAction.MASK);
+        redaction.setQueryParamDefaultAction(RedactionAction.MASK);
+        redaction.setJsonFieldDefaultAction(RedactionAction.MASK);
         redaction.setRules(List.of(exactRule));
 
         List<String> errors = new ArrayList<>();
@@ -95,11 +125,27 @@ class RedactionConfigLinterTest {
     void nullRulesCollectionIsAllowed() {
         RedactionConfig redaction = new RedactionConfig();
         redaction.setMask("***");
+        redaction.setHeaderDefaultAction(RedactionAction.MASK);
+        redaction.setQueryParamDefaultAction(RedactionAction.MASK);
+        redaction.setJsonFieldDefaultAction(RedactionAction.MASK);
         redaction.setRules(null);
 
         List<String> errors = new ArrayList<>();
         linter.lint(redaction, errors);
 
         assertThat(errors).isEmpty();
+    }
+
+    @Test
+    void missingDefaultActionsProduceClearErrors() {
+        RedactionConfig redaction = new RedactionConfig();
+        redaction.setMask("***");
+
+        List<String> errors = new ArrayList<>();
+        linter.lint(redaction, errors);
+
+        assertThat(errors).contains("testloom.redaction.header-default-action must not be null.");
+        assertThat(errors).contains("testloom.redaction.query-param-default-action must not be null.");
+        assertThat(errors).contains("testloom.redaction.json-field-default-action must not be null.");
     }
 }
