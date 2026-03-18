@@ -2,6 +2,7 @@ package dev.testloom.core.config.application.service;
 
 import dev.testloom.core.config.domain.model.RecorderConfig;
 import dev.testloom.core.config.domain.model.RedactionConfig;
+import dev.testloom.core.config.domain.model.RedactionNameNormalizer;
 import dev.testloom.core.config.domain.model.RedactionRule;
 import dev.testloom.core.config.domain.model.RedactionTargetType;
 import dev.testloom.core.config.domain.model.TestloomConfig;
@@ -10,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
@@ -55,9 +55,9 @@ public final class TestloomConfigNormalizer {
         return mapIfNotNull(source, redaction -> {
             RedactionConfig normalized = new RedactionConfig();
             normalized.setMask(normalizeMask(redaction.getMask()));
-            normalized.setHeaders(normalizeLowercaseList(redaction.getHeaders()));
-            normalized.setJsonFields(normalizeDistinctStrings(redaction.getJsonFields(), UnaryOperator.identity()));
-            normalized.setQueryParams(normalizeLowercaseList(redaction.getQueryParams()));
+            normalized.setHeaderDefaultAction(redaction.getHeaderDefaultAction());
+            normalized.setJsonFieldDefaultAction(redaction.getJsonFieldDefaultAction());
+            normalized.setQueryParamDefaultAction(redaction.getQueryParamDefaultAction());
             normalized.setRules(normalizeRules(redaction.getRules()));
             return normalized;
         });
@@ -88,22 +88,11 @@ public final class TestloomConfigNormalizer {
     }
 
     private static String normalizeRuleTarget(String value, RedactionTargetType targetType) {
-        String normalized = trimToNull(value);
-        if (normalized == null) {
-            return null;
-        }
-        if (targetType == RedactionTargetType.HEADER || targetType == RedactionTargetType.QUERY_PARAM) {
-            return normalized.toLowerCase(Locale.ROOT);
-        }
-        return normalized;
+        return RedactionNameNormalizer.normalize(value, targetType);
     }
 
     private static String normalizeMask(String value) {
         return value == null ? null : value.trim();
-    }
-
-    private static List<String> normalizeLowercaseList(List<String> values) {
-        return normalizeDistinctStrings(values, value -> value.toLowerCase(Locale.ROOT));
     }
 
     private static List<String> normalizeDistinctStrings(List<String> values, UnaryOperator<String> transformer) {

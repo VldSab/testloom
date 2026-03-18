@@ -11,17 +11,9 @@ testloom:
       - /actuator/**
   redaction:
     mask: "***"
-    headers:
-      - authorization
-      - cookie
-      - set-cookie
-    json-fields:
-      - password
-      - token
-      - secret
-    query-params:
-      - token
-      - api_key
+    header-default-action: MASK
+    query-param-default-action: MASK
+    json-field-default-action: MASK
     rules:
       - type: HEADER
         target: authorization

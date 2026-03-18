@@ -3,6 +3,7 @@ package dev.testloom.core.config.infrastructure.yaml;
 import dev.testloom.core.config.domain.exception.TestloomConfigException;
 import dev.testloom.core.config.domain.exception.TestloomConfigValidationException;
 import dev.testloom.core.config.domain.model.RecorderMode;
+import dev.testloom.core.config.domain.model.RedactionAction;
 import dev.testloom.core.config.domain.model.TestloomConfig;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -54,9 +55,9 @@ class YamlTestloomConfigLoaderTest {
                     include-paths: ["/api/**"]
                   redaction:
                     mask: "***"
-                    headers: ["authorization"]
-                    json-fields: ["password"]
-                    query-params: ["token"]
+                    header-default-action: REMOVE
+                    query-param-default-action: KEEP
+                    json-field-default-action: KEEP
                 """);
 
         TestloomConfig config = loader.loadIfExists(configPath).orElseThrow();
@@ -130,7 +131,7 @@ class YamlTestloomConfigLoaderTest {
                     output-dir: ./.testloom/captures
                   redaction:
                     mask: "***"
-                    headers: [authorization
+                    header-default-action: [KEEP
                 """);
         TestloomConfigException error = assertThrows(TestloomConfigException.class, () -> loader.load(configPath));
         assertThat(error).hasMessageThat().contains("Failed to parse YAML config");
@@ -158,9 +159,9 @@ class YamlTestloomConfigLoaderTest {
                     include-paths: ["/api/**", " /api/** "]
                   redaction:
                     mask: "###"
-                    headers: [" Authorization ", "authorization", "X-API-Key"]
-                    json-fields: ["password", " password "]
-                    query-params: ["token", "Token"]
+                    header-default-action: remove
+                    query-param-default-action: keep
+                    json-field-default-action: keep
                     rules:
                       - type: HEADER
                         target: " Authorization "
@@ -177,7 +178,9 @@ class YamlTestloomConfigLoaderTest {
         assertThat(config.getRecorder().getMode()).isEqualTo(RecorderMode.STAGING);
         assertThat(config.getRecorder().getOutputDir()).isEqualTo("./captures");
         assertThat(config.getRecorder().getIncludePaths()).containsExactly("/api/**").inOrder();
-        assertThat(config.getRedaction().getHeaders()).containsExactly("authorization", "x-api-key").inOrder();
+        assertThat(config.getRedaction().getHeaderDefaultAction()).isEqualTo(RedactionAction.REMOVE);
+        assertThat(config.getRedaction().getQueryParamDefaultAction()).isEqualTo(RedactionAction.KEEP);
+        assertThat(config.getRedaction().getJsonFieldDefaultAction()).isEqualTo(RedactionAction.KEEP);
         assertThat(config.getRedaction().getRules()).hasSize(2);
         assertThat(config.getRedaction().getRules().get(0).getTarget()).isEqualTo("authorization");
         assertThat(config.getRedaction().getRules().get(1).getTarget()).isEqualTo("token");
@@ -197,9 +200,9 @@ class YamlTestloomConfigLoaderTest {
                     exclude-paths: ["/actuator/**"]
                   redaction:
                     mask: "***"
-                    headers: ["authorization"]
-                    json-fields: ["password"]
-                    query-params: ["token"]
+                    header-default-action: ReMoVe
+                    query-param-default-action: KeEp
+                    json-field-default-action: kEeP
                     rules:
                       - type: HeAdEr
                         target: Authorization
@@ -272,6 +275,35 @@ class YamlTestloomConfigLoaderTest {
                 () -> loader.load(configPath)
         );
         assertThat(error).hasMessageThat().contains("not a valid regex");
+    }
+
+    @Test
+    void configWithUnknownRedactionTargetTypeFailsParsing(@TempDir Path tempDir) throws Exception {
+        Path configPath = writeConfig(tempDir, """
+                testloom:
+                  recorder:
+                    enabled: true
+                    mode: local
+                    output-dir: ./.testloom/captures
+                    include-bodies: true
+                    max-body-size-bytes: 65536
+                  redaction:
+                    mask: "***"
+                    header-default-action: MASK
+                    query-param-default-action: MASK
+                    json-field-default-action: MASK
+                    rules:
+                      - type: UNKNOWN_TYPE
+                        target: token
+                        matcher: EXACT
+                        action: MASK
+                """);
+
+        TestloomConfigException error = assertThrows(
+                TestloomConfigException.class,
+                () -> loader.load(configPath)
+        );
+        assertThat(error).hasMessageThat().contains("Failed to parse YAML config");
     }
 
     @Test

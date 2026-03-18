@@ -7,6 +7,8 @@ import dev.testloom.core.capture.application.service.SafeCaptureRecorder;
 import dev.testloom.core.capture.infrastructure.file.JsonFileCaptureWriter;
 import dev.testloom.core.config.application.port.TestloomConfigLoader;
 import dev.testloom.core.config.domain.model.TestloomConfig;
+import dev.testloom.core.redaction.application.port.CaptureRedactor;
+import dev.testloom.core.redaction.application.service.PolicyBasedCaptureRedactor;
 import dev.testloom.spring.capture.LoggingCaptureFailureHandler;
 import dev.testloom.spring.mvc.MvcCaptureEnvelopeFactory;
 import dev.testloom.spring.mvc.MvcCaptureFilter;
@@ -41,6 +43,7 @@ class TestloomAutoConfigurationTest {
                 .run(context -> {
                     assertThat(context.getBeansOfType(CaptureWriter.class)).hasSize(1);
                     assertThat(context.getBeansOfType(CaptureRecorder.class)).hasSize(1);
+                    assertThat(context.getBeansOfType(CaptureRedactor.class)).hasSize(1);
                     assertThat(context.getBeansOfType(MvcCaptureEnvelopeFactory.class)).hasSize(1);
                     assertThat(context.getBeansOfType(MvcCaptureFilter.class)).hasSize(1);
                 });
@@ -54,6 +57,7 @@ class TestloomAutoConfigurationTest {
                     assertThat(context.getBean(CaptureWriter.class)).isInstanceOf(JsonFileCaptureWriter.class);
                     assertThat(context.getBean(CaptureFailureHandler.class)).isInstanceOf(LoggingCaptureFailureHandler.class);
                     assertThat(context.getBean(CaptureRecorder.class)).isInstanceOf(SafeCaptureRecorder.class);
+                    assertThat(context.getBean(CaptureRedactor.class)).isInstanceOf(PolicyBasedCaptureRedactor.class);
                 });
     }
 
@@ -64,6 +68,7 @@ class TestloomAutoConfigurationTest {
                 .run(context -> {
                     assertThat(context.getBeansOfType(CaptureWriter.class)).hasSize(1);
                     assertThat(context.getBeansOfType(CaptureRecorder.class)).hasSize(1);
+                    assertThat(context.getBeansOfType(CaptureRedactor.class)).hasSize(1);
                     assertThat(context.getBeansOfType(MvcCaptureFilter.class)).hasSize(1);
                 });
     }
@@ -93,6 +98,15 @@ class TestloomAutoConfigurationTest {
                 .withBean(TestloomConfig.class, TestloomAutoConfigurationTest::enabledConfig)
                 .withBean(CaptureRecorder.class, () -> customRecorder)
                 .run(context -> assertThat(context.getBean(CaptureRecorder.class)).isSameInstanceAs(customRecorder));
+    }
+
+    @Test
+    void customCaptureRedactorOverridesDefaultRedactorBean() {
+        CaptureRedactor customRedactor = envelope -> envelope;
+        contextRunner
+                .withBean(TestloomConfig.class, TestloomAutoConfigurationTest::enabledConfig)
+                .withBean(CaptureRedactor.class, () -> customRedactor)
+                .run(context -> assertThat(context.getBean(CaptureRedactor.class)).isSameInstanceAs(customRedactor));
     }
 
     @Test
@@ -132,6 +146,7 @@ class TestloomAutoConfigurationTest {
                     assertThat(context.getBeansOfType(CaptureWriter.class)).hasSize(1);
                     assertThat(context.getBeansOfType(CaptureRecorder.class)).hasSize(1);
                     assertThat(context.getBeansOfType(CaptureFailureHandler.class)).hasSize(1);
+                    assertThat(context.getBeansOfType(CaptureRedactor.class)).hasSize(1);
                 });
     }
 

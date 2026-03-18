@@ -5,6 +5,7 @@ import dev.testloom.core.config.domain.model.RecorderConfig;
 import dev.testloom.core.config.domain.model.TestloomConfig;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
@@ -18,6 +19,7 @@ import java.util.Objects;
 /**
  * Builds capture envelopes from MVC request/response wrappers.
  */
+@Slf4j
 public final class MvcCaptureEnvelopeFactory {
     private static final String SCHEMA_VERSION = "0.1.0";
     private static final String TRANSPORT = "HTTP";
@@ -158,7 +160,8 @@ public final class MvcCaptureEnvelopeFactory {
         }
         try {
             return Charset.forName(encoding);
-        } catch (Exception ignored) {
+        } catch (Exception exception) {
+            log.debug("Unsupported HTTP charset '{}'; fallback to UTF-8.", encoding, exception);
             return StandardCharsets.UTF_8;
         }
     }
@@ -170,7 +173,8 @@ public final class MvcCaptureEnvelopeFactory {
         }
         try {
             return Long.parseLong(value);
-        } catch (NumberFormatException ignored) {
+        } catch (NumberFormatException exception) {
+            log.debug("Invalid Content-Length header '{}'; fallback to unknown size.", value, exception);
             return -1;
         }
     }

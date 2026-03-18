@@ -62,10 +62,65 @@ class AntPatternMvcCapturePathMatcherTest {
     }
 
     @Test
+    void excludePatternHasPriorityWhenBothIncludeAndExcludeMatch() {
+        TestloomConfig config = TestloomConfig.defaults();
+        config.getRecorder().setIncludePaths(List.of("/api/orders/**"));
+        config.getRecorder().setExcludePaths(List.of("/api/orders/**"));
+
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/orders/42");
+
+        assertThat(matcher.shouldCapture(request, config)).isFalse();
+    }
+
+    @Test
     void shouldIgnoreNullPatternEntries() {
         TestloomConfig config = TestloomConfig.defaults();
         config.getRecorder().setIncludePaths(Arrays.asList(null, "/api/**"));
         config.getRecorder().setExcludePaths(Arrays.asList((String) null));
+
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/orders");
+
+        assertThat(matcher.shouldCapture(request, config)).isTrue();
+    }
+
+    @Test
+    void shouldIgnoreBlankPatternEntries() {
+        TestloomConfig config = TestloomConfig.defaults();
+        config.getRecorder().setIncludePaths(Arrays.asList("   ", "\t", "/api/**"));
+        config.getRecorder().setExcludePaths(Arrays.asList("", "   "));
+
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/orders");
+
+        assertThat(matcher.shouldCapture(request, config)).isTrue();
+    }
+
+    @Test
+    void invalidIncludePatternIsTreatedAsNonMatch() {
+        TestloomConfig config = TestloomConfig.defaults();
+        config.getRecorder().setIncludePaths(List.of("/api/{"));
+        config.getRecorder().setExcludePaths(List.of());
+
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/orders");
+
+        assertThat(matcher.shouldCapture(request, config)).isFalse();
+    }
+
+    @Test
+    void invalidTemplateRegexPatternIsTreatedAsNonMatch() {
+        TestloomConfig config = TestloomConfig.defaults();
+        config.getRecorder().setIncludePaths(List.of("/api/{id:[}"));
+        config.getRecorder().setExcludePaths(List.of());
+
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/orders");
+
+        assertThat(matcher.shouldCapture(request, config)).isFalse();
+    }
+
+    @Test
+    void invalidExcludePatternDoesNotBlockCapture() {
+        TestloomConfig config = TestloomConfig.defaults();
+        config.getRecorder().setIncludePaths(List.of("/api/**"));
+        config.getRecorder().setExcludePaths(List.of("/api/{"));
 
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/orders");
 

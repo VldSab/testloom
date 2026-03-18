@@ -2,15 +2,13 @@ package dev.testloom.spring.capture;
 
 import dev.testloom.core.capture.application.port.CaptureFailureHandler;
 import dev.testloom.core.capture.domain.model.CaptureEnvelope;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Default failure handler that logs capture persistence failures.
  */
+@Slf4j
 public final class LoggingCaptureFailureHandler implements CaptureFailureHandler {
-    private static final Log log = LogFactory.getLog(LoggingCaptureFailureHandler.class);
-
     @Override
     public void onCaptureFailure(CaptureEnvelope envelope, Exception exception) {
         String method = "UNKNOWN";
@@ -23,6 +21,6 @@ public final class LoggingCaptureFailureHandler implements CaptureFailureHandler
                 path = envelope.request().path();
             }
         }
-        log.warn("Failed to persist Testloom capture for request [" + method + " " + path + "].", exception);
+        log.warn("Failed to persist Testloom capture for request [{} {}].", method, path, exception);
     }
 }

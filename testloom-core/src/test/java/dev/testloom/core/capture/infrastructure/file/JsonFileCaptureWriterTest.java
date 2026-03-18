@@ -78,6 +78,23 @@ class JsonFileCaptureWriterTest {
     }
 
     @Test
+    void writeAppendsIncrementingSuffixesAcrossRepeatedCollisions(@TempDir Path tempDir) throws Exception {
+        Path outputDir = tempDir.resolve("captures");
+        JsonFileCaptureWriter writer = new JsonFileCaptureWriter(objectMapper, outputDir.toString());
+        CaptureEnvelope envelope = sampleEnvelope("/api/hello");
+
+        writer.write(envelope);
+        writer.write(envelope);
+        writer.write(envelope);
+
+        List<Path> files = listFiles(outputDir);
+        assertThat(files).hasSize(3);
+        assertThat(files.get(0).getFileName().toString()).isEqualTo("20260315T120000000Z_api_hello.json");
+        assertThat(files.get(1).getFileName().toString()).isEqualTo("20260315T120000000Z_api_hello_2.json");
+        assertThat(files.get(2).getFileName().toString()).isEqualTo("20260315T120000000Z_api_hello_3.json");
+    }
+
+    @Test
     void writeUsesCurrentTimestampWhenRecordedAtIsBlank(@TempDir Path tempDir) throws Exception {
         Path outputDir = tempDir.resolve("captures");
         JsonFileCaptureWriter writer = new JsonFileCaptureWriter(objectMapper, outputDir.toString());

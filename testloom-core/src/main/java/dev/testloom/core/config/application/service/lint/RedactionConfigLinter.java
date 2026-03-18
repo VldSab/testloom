@@ -20,6 +20,15 @@ public final class RedactionConfigLinter implements ConfigSectionLinter<Redactio
         if (LintStrings.isBlank(redaction.getMask())) {
             errors.add("testloom.redaction.mask must not be blank.");
         }
+        if (redaction.getHeaderDefaultAction() == null) {
+            errors.add("testloom.redaction.header-default-action must not be null.");
+        }
+        if (redaction.getQueryParamDefaultAction() == null) {
+            errors.add("testloom.redaction.query-param-default-action must not be null.");
+        }
+        if (redaction.getJsonFieldDefaultAction() == null) {
+            errors.add("testloom.redaction.json-field-default-action must not be null.");
+        }
         lintRules(redaction.getRules(), errors);
     }
 

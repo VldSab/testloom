@@ -4,12 +4,14 @@ import dev.testloom.core.capture.application.port.CaptureFailureHandler;
 import dev.testloom.core.capture.application.port.CaptureRecorder;
 import dev.testloom.core.capture.application.port.CaptureWriter;
 import dev.testloom.core.capture.domain.model.CaptureEnvelope;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Objects;
 
 /**
  * Fail-safe recorder that never propagates writer failures to caller code.
  */
+@Slf4j
 public final class SafeCaptureRecorder implements CaptureRecorder {
     private final CaptureWriter captureWriter;
     private final CaptureFailureHandler failureHandler;
@@ -30,6 +32,7 @@ public final class SafeCaptureRecorder implements CaptureRecorder {
         try {
             captureWriter.write(envelope);
         } catch (Exception exception) {
+            log.debug("Capture writer failure delegated to failure handler.", exception);
             failureHandler.onCaptureFailure(envelope, exception);
         }
     }

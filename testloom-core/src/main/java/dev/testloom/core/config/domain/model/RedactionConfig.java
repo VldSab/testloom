@@ -13,11 +13,12 @@ import java.util.List;
 @Setter
 public class RedactionConfig {
     private String mask;
-    private List<String> headers;
-    @JsonProperty("json-fields")
-    private List<String> jsonFields;
-    @JsonProperty("query-params")
-    private List<String> queryParams;
+    @JsonProperty("header-default-action")
+    private RedactionAction headerDefaultAction;
+    @JsonProperty("json-field-default-action")
+    private RedactionAction jsonFieldDefaultAction;
+    @JsonProperty("query-param-default-action")
+    private RedactionAction queryParamDefaultAction;
     private List<RedactionRule> rules;
 
     /**
@@ -28,9 +29,9 @@ public class RedactionConfig {
     public static RedactionConfig defaults() {
         RedactionConfig config = new RedactionConfig();
         config.setMask("***");
-        config.setHeaders(DefaultRedactionHeader.valuesList());
-        config.setJsonFields(DefaultRedactionJsonField.valuesList());
-        config.setQueryParams(DefaultRedactionQueryParam.valuesList());
+        config.setHeaderDefaultAction(RedactionAction.MASK);
+        config.setJsonFieldDefaultAction(RedactionAction.MASK);
+        config.setQueryParamDefaultAction(RedactionAction.MASK);
         config.setRules(List.of());
         return config;
     }
